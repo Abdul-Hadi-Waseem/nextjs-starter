@@ -1,18 +1,16 @@
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { CHART_PLOT_HEIGHT } from '../constants/chart';
+import { PieGraphHeader } from './chart-headers';
 
 export function PieGraphSkeleton() {
   return (
     <Card className='flex h-full flex-col'>
-      <CardHeader className='items-center pb-0'>
-        <div className='flex items-center gap-2'>
-          <Skeleton className='h-6 w-[100px]' />
-          <Skeleton className='h-5 w-[60px] rounded-full' />
-        </div>
-        <Skeleton className='h-4 w-[150px]' />
-      </CardHeader>
+      <PieGraphHeader />
       <CardContent className='flex flex-1 items-center justify-center pb-0'>
-        <Skeleton className='h-[250px] w-[250px] rounded-full' />
+        <div className={`flex aspect-square items-center justify-center ${CHART_PLOT_HEIGHT}`}>
+          <Skeleton className='size-[85%] rounded-full' />
+        </div>
       </CardContent>
     </Card>
   );

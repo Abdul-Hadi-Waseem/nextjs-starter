@@ -2,15 +2,15 @@
 
 import { Bar, BarChart, XAxis } from 'recharts';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
-import { Badge } from '@/components/ui/badge';
-import { Icons } from '@/components/icons';
+import { BarGraphHeader } from './chart-headers';
+import { CHART_PLOT_HEIGHT } from '../constants/chart';
 
 const chartData = [
   { month: 'January', desktop: 186, mobile: 80 },
@@ -35,18 +35,9 @@ const chartConfig = {
 export function BarGraph() {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>
-          Bar Chart - Multiple
-          <Badge variant='outline'>
-            <Icons.trendingDown />
-            -5.2%
-          </Badge>
-        </CardTitle>
-        <CardDescription>January - June 2025</CardDescription>
-      </CardHeader>
+      <BarGraphHeader />
       <CardContent>
-        <ChartContainer config={chartConfig}>
+        <ChartContainer config={chartConfig} className={`aspect-auto w-full ${CHART_PLOT_HEIGHT}`}>
           <BarChart accessibilityLayer data={chartData}>
             <rect
               x='0'

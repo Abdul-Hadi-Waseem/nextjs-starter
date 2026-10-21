@@ -2,16 +2,16 @@
 
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
-import { Badge } from '@/components/ui/badge';
-import { Icons } from '@/components/icons';
 import React from 'react';
+import { AreaGraphHeader } from './chart-headers';
+import { CHART_PLOT_HEIGHT } from '../constants/chart';
 
 const chartData = [
   { month: 'January', desktop: 342, mobile: 245 },
@@ -42,18 +42,9 @@ const chartConfig = {
 export function AreaGraph() {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>
-          Dotted Area Chart
-          <Badge variant='outline'>
-            <Icons.trendingUp />
-            -5.2%
-          </Badge>
-        </CardTitle>
-        <CardDescription>Showing total visitors for the last 6 months</CardDescription>
-      </CardHeader>
+      <AreaGraphHeader />
       <CardContent>
-        <ChartContainer config={chartConfig}>
+        <ChartContainer config={chartConfig} className={`aspect-auto w-full ${CHART_PLOT_HEIGHT}`}>
           <AreaChart accessibilityLayer data={chartData}>
             <CartesianGrid vertical={false} strokeDasharray='3 3' />
             <XAxis

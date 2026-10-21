@@ -1,23 +1,33 @@
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+// Each placeholder sits inside the same typography as the real text and is
+// exactly one line tall (`h-lh`), so rows match the loaded card's height.
 export function RecentSalesSkeleton() {
   return (
     <Card className='h-full'>
       <CardHeader>
-        <Skeleton className='h-6 w-[140px]' /> {/* CardTitle */}
-        <Skeleton className='h-4 w-[180px]' /> {/* CardDescription */}
+        <CardTitle>Recent Sales</CardTitle>
+        <div className='text-sm'>
+          <Skeleton className='h-lh w-[180px]' />
+        </div>
       </CardHeader>
       <CardContent>
         <div className='space-y-8'>
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className='flex items-center'>
-              <Skeleton className='h-9 w-9 rounded-full' /> {/* Avatar */}
+              <Skeleton className='size-9 rounded-full' />
               <div className='ml-4 space-y-1'>
-                <Skeleton className='h-4 w-[120px]' /> {/* Name */}
-                <Skeleton className='h-4 w-[160px]' /> {/* Email */}
+                <div className='text-sm leading-none'>
+                  <Skeleton className='h-lh w-[120px]' />
+                </div>
+                <div className='text-sm'>
+                  <Skeleton className='h-lh w-[160px]' />
+                </div>
               </div>
-              <Skeleton className='ml-auto h-4 w-[80px]' /> {/* Amount */}
+              <div className='ml-auto'>
+                <Skeleton className='h-lh w-[80px]' />
+              </div>
             </div>
           ))}
         </div>

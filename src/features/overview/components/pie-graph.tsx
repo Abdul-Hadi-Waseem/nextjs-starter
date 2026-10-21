@@ -2,15 +2,15 @@
 
 import { LabelList, Pie, PieChart } from 'recharts';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
-import { Badge } from '@/components/ui/badge';
-import { Icons } from '@/components/icons';
+import { PieGraphHeader } from './chart-headers';
+import { CHART_PLOT_HEIGHT } from '../constants/chart';
 
 const chartData = [
   { browser: 'chrome', visitors: 275, fill: 'var(--color-chrome)' },
@@ -49,20 +49,11 @@ const chartConfig = {
 export function PieGraph() {
   return (
     <Card className='flex h-full flex-col'>
-      <CardHeader className='items-center pb-0'>
-        <CardTitle>
-          Pie Chart
-          <Badge variant='outline'>
-            <Icons.trendingUp />
-            +5.2%
-          </Badge>
-        </CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
-      </CardHeader>
+      <PieGraphHeader />
       <CardContent className='flex flex-1 items-center justify-center pb-0'>
         <ChartContainer
           config={chartConfig}
-          className='[&_.recharts-text]:fill-background mx-auto aspect-square max-h-[300px] min-h-[250px]'
+          className={`[&_.recharts-text]:fill-background mx-auto aspect-square ${CHART_PLOT_HEIGHT}`}
         >
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent nameKey='visitors' hideLabel />} />
