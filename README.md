@@ -113,6 +113,8 @@ Deploy to Vercel, or use the included Node.js and Bun Dockerfiles (Next.js stand
 
 ## Credits
 
+Created by [Abdul Hadi Waseem](https://github.com/Abdul-Hadi-Waseem) as [nextjs-starter](https://github.com/Abdul-Hadi-Waseem/nextjs-starter). If you start a project from this template, please keep this line and the [LICENSE](./LICENSE).
+
 Built on [next-shadcn-dashboard-starter](https://github.com/Kiranism/next-shadcn-dashboard-starter) by [Kiranism](https://github.com/Kiranism), used under the MIT License. Thank you for the excellent foundation.
 
 ## License

@@ -2,9 +2,15 @@
   "name": "nextjs-starter",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://github.com/Abdul-Hadi-Waseem/nextjs-starter",
+  "license": "MIT",
   "author": {
     "name": "Abdul Hadi Waseem",
     "url": "https://github.com/Abdul-Hadi-Waseem"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abdul-Hadi-Waseem/nextjs-starter.git"
   },
   "scripts": {
     "dev": "next dev",
