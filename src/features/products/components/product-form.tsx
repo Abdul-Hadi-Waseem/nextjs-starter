@@ -5,6 +5,7 @@ import { LoadingButton } from '@/components/ui/loading-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FieldGroup } from '@/components/ui/field';
 import { useAppForm } from '@/lib/form';
+import { FileUploadField } from '@/components/forms/fields/file-upload-field';
 import { categoryOptions } from '@/features/products/constants/product-options';
 import { productSchema, type ProductFormValues } from '@/features/products/schemas/product';
 import { useMutation } from '@tanstack/react-query';
@@ -90,8 +91,8 @@ export default function ProductForm({
           <FieldGroup>
             <form.AppField
               name='image'
-              children={(field) => (
-                <field.FileUploadField
+              children={() => (
+                <FileUploadField
                   label='Product Image'
                   description='Upload a product image'
                   maxSize={5 * 1024 * 1024}

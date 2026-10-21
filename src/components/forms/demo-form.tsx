@@ -4,6 +4,10 @@ import * as React from 'react';
 import { useStore } from '@tanstack/react-form';
 import * as z from 'zod';
 import { useAppForm } from '@/lib/form';
+import { ComboboxField } from '@/components/forms/fields/combobox-field';
+import { DatePickerField, DateRangeField } from '@/components/forms/fields/date-picker-field';
+import { FileUploadField } from '@/components/forms/fields/file-upload-field';
+import { OtpField } from '@/components/forms/fields/otp-field';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FieldGroup } from '@/components/ui/field';
@@ -281,8 +285,8 @@ export default function DemoForm() {
 
               <form.AppField
                 name='framework'
-                children={(field) => (
-                  <field.ComboboxField
+                children={() => (
+                  <ComboboxField
                     label='Framework'
                     required
                     description='Searchable dropdown'
@@ -389,11 +393,8 @@ export default function DemoForm() {
             <FieldGroup className='grid grid-cols-1 gap-4 md:grid-cols-2'>
               <form.AppField
                 name='birthDate'
-                children={(field) => (
-                  <field.DatePickerField
-                    label='Birth Date'
-                    disabledDates={(date) => date > new Date()}
-                  />
+                children={() => (
+                  <DatePickerField label='Birth Date' disabledDates={(date) => date > new Date()} />
                 )}
               />
 
@@ -405,7 +406,7 @@ export default function DemoForm() {
 
             <form.AppField
               name='dateRange'
-              children={(field) => <field.DateRangeField label='Date Range' />}
+              children={() => <DateRangeField label='Date Range' />}
             />
 
             {/* ─── SPECIAL INPUTS ─── */}
@@ -414,12 +415,8 @@ export default function DemoForm() {
             <FieldGroup className='grid grid-cols-1 gap-4 md:grid-cols-2'>
               <form.AppField
                 name='otp'
-                children={(field) => (
-                  <field.OtpField
-                    label='Verification Code'
-                    required
-                    description='6-digit OTP input'
-                  />
+                children={() => (
+                  <OtpField label='Verification Code' required description='6-digit OTP input' />
                 )}
               />
 
@@ -451,8 +448,8 @@ export default function DemoForm() {
 
             <form.AppField
               name='avatar'
-              children={(field) => (
-                <field.FileUploadField
+              children={() => (
+                <FileUploadField
                   label='Profile Picture'
                   description='Drag & drop or click to upload (max 5MB)'
                   maxSize={5000000}

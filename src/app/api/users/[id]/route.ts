@@ -6,10 +6,13 @@
 
 import { fakeUsers } from '@/constants/mock-api-users';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireSession } from '@/app/api/_mock/auth';
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function PUT(request: NextRequest, { params }: Params) {
+  const unauthorized = requireSession(request);
+  if (unauthorized) return unauthorized;
 
   const { id } = await params;
   const body = await request.json();
@@ -23,6 +26,8 @@ export async function PUT(request: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(request: NextRequest, { params }: Params) {
+  const unauthorized = requireSession(request);
+  if (unauthorized) return unauthorized;
 
   const { id } = await params;
   const data = await fakeUsers.deleteUser(Number(id));

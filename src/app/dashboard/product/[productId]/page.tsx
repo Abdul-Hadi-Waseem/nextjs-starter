@@ -11,7 +11,6 @@ export const metadata = {
 type PageProps = { params: Promise<{ productId: string }> };
 
 export default async function Page(props: PageProps) {
-
   const params = await props.params;
   const queryClient = getQueryClient();
 

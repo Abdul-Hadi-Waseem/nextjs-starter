@@ -6,6 +6,7 @@ import SearchInput from '../search-input';
 import { ThemeSelector } from '../themes/theme-selector';
 import { ThemeModeToggle } from '../themes/theme-mode-toggle';
 import CtaGithub from './cta-github';
+import { UserNav } from './user-nav';
 
 export default function Header() {
   return (
@@ -24,7 +25,9 @@ export default function Header() {
         <ThemeModeToggle />
         <div className='hidden sm:block'>
           <ThemeSelector />
-        </div>      </div>
+        </div>
+        <UserNav />
+      </div>
     </header>
   );
 }

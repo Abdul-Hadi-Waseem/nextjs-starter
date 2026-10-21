@@ -15,7 +15,6 @@
     "out/**",
     "build/**",
     "node_modules/**",
-    "scripts/**",
     "pnpm-lock.yaml",
     "**/*.md",
     "**/*.mdc",

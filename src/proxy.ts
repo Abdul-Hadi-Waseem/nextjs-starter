@@ -1,7 +1,27 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { AUTH } from '@/lib/api/config';
 
-export function proxy(_req: NextRequest) {
+const PROTECTED_PREFIX = '/dashboard';
+
+// Only checks that the auth cookie exists and redirects to sign-in if not.
+// The backend still verifies the token on every request.
+export function proxy(req: NextRequest) {
+  if (!AUTH.enabled) return NextResponse.next();
+
+  const { pathname, search } = req.nextUrl;
+  const hasSession = req.cookies.has(AUTH.cookieName);
+
+  if (pathname.startsWith(PROTECTED_PREFIX) && !hasSession) {
+    const signIn = new URL(AUTH.signInPath, req.url);
+    signIn.searchParams.set('next', pathname + search);
+    return NextResponse.redirect(signIn);
+  }
+
+  if (pathname.startsWith(AUTH.signInPath) && hasSession) {
+    return NextResponse.redirect(new URL(AUTH.homePath, req.url));
+  }
+
   return NextResponse.next();
 }
 

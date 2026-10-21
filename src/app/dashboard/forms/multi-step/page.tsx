@@ -6,7 +6,6 @@ export const metadata = {
 };
 
 export default async function Page() {
-
   return (
     <PageContainer pageTitle='Multi-Step Form' pageDescription='Multi-step wizard form pattern.'>
       <FormsShowcasePage />

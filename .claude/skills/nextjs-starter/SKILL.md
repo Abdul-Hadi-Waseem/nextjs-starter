@@ -1,7 +1,7 @@
 ---
 name: nextjs-starter
 description: |
-  Guide for building features, pages, tables, forms, themes, and navigation in this Next.js 16 shadcn dashboard template. Use this skill whenever the user wants to add a new page, create a feature module, build a data table, add a form, configure navigation items, add a theme, set up RBAC access control, or work with the dashboard's patterns and conventions. Also triggers when adding routes under /dashboard, working with Clerk auth/orgs/billing, creating mock APIs, or modifying the sidebar. Even if the user doesn't mention "dashboard" explicitly — if they're adding UI, pages, or features to this project, use this skill.
+  Guide for building features, pages, tables, forms, themes, and navigation in this Next.js 16 shadcn dashboard template. Use this skill whenever the user wants to add a new page, create a feature module, build a data table, add a form, configure navigation items, add a theme, set up role-based access, call the backend, or work with the dashboard's patterns and conventions. Also triggers when adding routes under /dashboard, wiring a service to an API, working with auth, adding images, or modifying the sidebar. Even if the user doesn't mention "dashboard" explicitly — if they're adding UI, pages, or features to this project, use this skill.
 ---
 
 # Dashboard Development Guide
@@ -10,36 +10,44 @@ This skill encodes the exact patterns and conventions used in this Next.js 16 + 
 
 ## Quick Reference: What Goes Where
 
-| Task             | Location                                            |
-| ---------------- | --------------------------------------------------- |
-| New page         | `src/app/dashboard/<name>/page.tsx`                 |
-| New feature      | `src/features/<name>/components/`                   |
-| Query options    | `src/features/<name>/api/queries.ts`                |
-| Nav item         | `src/config/nav-config.ts`                          |
-| Types            | `src/types/index.ts`                                |
-| Mock data        | `src/constants/mock-api.ts` or `mock-api-<name>.ts` |
-| Search params    | `src/lib/searchparams.ts`                           |
-| Query client     | `src/lib/query-client.ts`                           |
-| Theme CSS        | `src/styles/themes/<name>.css`                      |
-| Theme registry   | `src/components/themes/theme.config.ts`             |
-| Custom hook      | `src/hooks/`                                        |
-| Form components  | `src/components/forms/`                             |
-| Table components | `src/components/data-table/`                          |
-| Icons registry   | `src/components/icons.tsx`                          |
+| Task              | Location                                                    |
+| ----------------- | ----------------------------------------------------------- |
+| New page          | `src/app/dashboard/<name>/page.tsx`                         |
+| API types         | `src/features/<name>/api/types.ts`                          |
+| Backend calls     | `src/features/<name>/api/service.ts` (uses `api`)           |
+| Query options     | `src/features/<name>/api/queries.ts`                        |
+| Mutation options  | `src/features/<name>/api/mutations.ts`                      |
+| Feature UI        | `src/features/<name>/components/`                           |
+| Zod schemas       | `src/features/<name>/schemas/`                              |
+| HTTP client       | `src/lib/api` (`api.get/post/put/patch/delete`)             |
+| Mock backend      | `src/app/api/<name>/route.ts` + `src/constants/mock-api-*`  |
+| Auth / roles      | `src/features/auth` (`ROLE`, `hasAccess`, `requireAccess`)  |
+| Nav item          | `src/config/nav-config.ts`                                  |
+| Search params     | `src/lib/searchparams.ts`                                   |
+| Query client      | `src/lib/query-client.ts`                                   |
+| Theme CSS         | `src/styles/themes/<name>.css`                              |
+| Form components   | `src/components/forms/`                                     |
+| Table components  | `src/components/data-table/`                                |
+| Icons registry    | `src/components/icons.tsx`                                  |
+| Images            | `public/images/*.webp` (rendered with `next/image`)         |
 
 ---
 
 ## Adding a New Feature (End-to-End)
 
-When a user asks to add a new feature (e.g., "add a users page", "create an orders section"), follow all these steps in order:
+When a user asks to add a feature (e.g. "add an orders page"), do all of these in order:
 
-1. **Create mock API** in `src/constants/mock-api-<name>.ts`
-2. **Create query options** in `src/features/<name>/api/queries.ts`
-3. **Create the feature module** in `src/features/<name>/components/`
-4. **Create the page route** in `src/app/dashboard/<name>/page.tsx`
-5. **Add search params** in `src/lib/searchparams.ts` (if table/filtering needed)
-6. **Add navigation** in `src/config/nav-config.ts`
-7. **Register icon** in `src/components/icons.tsx` (if new icon needed)
+1. **Types**: `src/features/<name>/api/types.ts` (response, filters, mutation payload).
+2. **Service**: `src/features/<name>/api/service.ts`. Every call goes through `api` from `@/lib/api`; never `fetch` directly. Authenticated by default; `{ auth: false }` for public endpoints.
+3. **Queries**: `api/queries.ts`, with a key factory (`orderKeys.all/list/detail`) plus `queryOptions`.
+4. **Mutations**: `api/mutations.ts`, with `mutationOptions` that invalidate `orderKeys.all` on success.
+5. **Mock backend** (only if the real endpoint doesn't exist yet): `src/app/api/<name>/route.ts`. Call `requireSession(request)` first, like `src/app/api/products/route.ts`.
+6. **Components**: listing (server prefetch + `HydrationBoundary`), table, form, under `src/features/<name>/components/`.
+7. **Page**: `src/app/dashboard/<name>/page.tsx`. If it's restricted: `await requireAccess({ role: ROLE.ADMIN })` first.
+8. **Search params**: `src/lib/searchparams.ts` (if it has a table or filters).
+9. **Navigation**: `src/config/nav-config.ts`, with the same `access` as the page guard.
+10. **Icon**: `src/components/icons.tsx` (if a new one is needed).
+11. **Check**: `bun run typecheck && bun run lint && bun run build && bun run bundle:check`.
 
 ---
 
@@ -51,17 +59,29 @@ The project uses **TanStack React Query** for data fetching with server-side pre
 
 Define reusable query options shared between server prefetch and client hooks:
 
-```tsx
+```ts
+// api/service.ts — the only file that talks to the backend
+import { api } from '@/lib/api';
+import type { EntitiesResponse, EntityFilters } from './types';
+
+export async function getEntities(filters: EntityFilters) {
+  return api.get<EntitiesResponse>('/entities', { query: filters });
+}
+```
+
+```ts
+// api/queries.ts
 import { queryOptions } from '@tanstack/react-query';
-import { fakeEntities, type Entity } from '@/constants/mock-api-entities';
+import { getEntities } from './service';
+import type { EntityFilters } from './types';
 
-export type { Entity };
+export const entityKeys = {
+  all: ['entities'] as const,
+  list: (filters: EntityFilters) => [...entityKeys.all, 'list', filters] as const
+};
 
-export const entitiesQueryOptions = (filters: { page?: number; limit?: number; search?: string }) =>
-  queryOptions({
-    queryKey: ['entities', filters],
-    queryFn: () => fakeEntities.getEntities(filters)
-  });
+export const entitiesQueryOptions = (filters: EntityFilters) =>
+  queryOptions({ queryKey: entityKeys.list(filters), queryFn: () => getEntities(filters) });
 ```
 
 ### Server Prefetch + Client Hydration (Listing Component)
@@ -133,6 +153,8 @@ export function EntityTable() {
 }
 ```
 
+**Errors and auth:** don't handle 401s in components. The query client redirects to sign-in globally and never retries 4xx errors. Use `isApiError(error)` to read `error.status` and `error.message`.
+
 **Key points:**
 
 - `shallow: true` — URL changes stay client-side, React Query fetches on the client
@@ -144,12 +166,16 @@ export function EntityTable() {
 ### Mutations (Forms)
 
 ```tsx
-const queryClient = useQueryClient();
+// api/mutations.ts
+export const createEntityMutation = mutationOptions({
+  mutationFn: (data: EntityPayload) => createEntity(data),
+  onSuccess: () => getQueryClient().invalidateQueries({ queryKey: entityKeys.all })
+});
 
+// component: spread the shared options, add UI side effects
 const createMutation = useMutation({
-  mutationFn: (data: Payload) => fakeEntities.createEntity(data),
+  ...createEntityMutation,
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['entities'] });
     toast.success('Created successfully');
     router.push('/dashboard/entities');
   },
@@ -274,7 +300,9 @@ const form = useAppForm({
 </form>
 ```
 
-**Available components** (all take `label`, `description?`, `required?`): `TextField` (any input type; number converts at the edge, async-validator spinner built in), `TextareaField` (`showCount`), `SelectField`, `CheckboxField`, `SwitchField`, `RadioGroupField`, `SliderField`, `ComboboxField`, `DatePickerField`, `DateRangeField`, `OtpField`, `ColorField`, `FileUploadField`, `CheckboxGroupField`, `TagsField`, `ToggleGroupField`.
+**Available components** (all take `label`, `description?`, `required?`): `TextField` (any input type; number converts at the edge, async-validator spinner built in), `TextareaField` (`showCount`), `SelectField`, `CheckboxField`, `SwitchField`, `RadioGroupField`, `SliderField`, `ColorField`, `CheckboxGroupField`, `TagsField`, `ToggleGroupField`.
+
+**Heavy fields are not registered** (so every form doesn't load cmdk, react-day-picker or react-dropzone): import `ComboboxField`, `DatePickerField`, `DateRangeField`, `OtpField` or `FileUploadField` from `@/components/forms/fields/<name>-field` and render them in the render prop: `<form.AppField name='date' children={() => <DatePickerField label='Date' />} />`.
 
 **Rules:**
 
@@ -289,12 +317,23 @@ const form = useAppForm({
 
 ---
 
-## 5. Navigation, Search Params, Icons, Themes
+## 5. Navigation and Access Control
 
-- **Nav**: `src/config/nav-config.ts` — groups with RBAC `access` property
-- **Search params**: `src/lib/searchparams.ts` — add new params with `parseAsString`/`parseAsInteger`
-- **Icons**: `src/components/icons.tsx` — single source of truth, never import `@tabler/icons-react` directly
-- **Themes**: `src/styles/themes/<name>.css` with OKLCH colors, register in `theme.config.ts`
+- **Nav**: `src/config/nav-config.ts`. Add `access: { role: ROLE.ADMIN }` or `{ permission: 'users:write' }`. `useFilteredNavGroups` (`src/hooks/use-nav.ts`) hides items the signed-in user (`/auth/me`) can't access. The Cmd+K palette uses the same filter.
+- **Page guard**: `await requireAccess({ role: ROLE.ADMIN })` at the top of the server page. Signed-out users go to sign-in; users without access get a 404.
+- Hiding UI is only UX. The backend must enforce the same rule.
+- **Search params**: `src/lib/searchparams.ts`. Add new params with `parseAsString`/`parseAsInteger`.
+- **Icons**: `src/components/icons.tsx` is the single source of truth. Never import `@tabler/icons-react` directly.
+- **Themes**: `src/styles/themes/<name>.css` with OKLCH colors, registered in `theme.config.ts`.
+
+---
+
+## 6. Performance Rules (enforced in CI)
+
+- **Bundle budget**: `bun run bundle:check` fails when a route's gzipped first-load JS goes over `bundle-budget.json`. Never just raise a limit; find what grew first (`bun run analyze`).
+- **Heavy client-only libraries** (charts, editors, command palettes) load with `next/dynamic`. See `src/features/overview/components/lazy-graphs.tsx` and `src/components/kbar/lazy.tsx`.
+- **Images**: WebP/AVIF/SVG only (`bun run images:check`, max 300 KB; PNG/JPG only in `public/og/`). Always `next/image` (raw `<img>` is a lint error), with `sizes` set.
+- **Image loader** via `NEXT_PUBLIC_IMAGE_LOADER`: empty = Next optimizer, `cloudflare` = edge transforms, `none` = no resizing. Don't hardcode a loader in components.
 
 ---
 
@@ -302,6 +341,7 @@ const form = useAppForm({
 
 - **`cn()` for class merging** — never concatenate className strings
 - **Server components by default** — only add `'use client'` when needed
-- **React Query for data fetching** — `useQuery` + `shallow: true` for tables, `useMutation` for forms
+- **React Query for data fetching** — `useQuery` + `shallow: true` for tables, `useMutation` (spreading shared `mutationOptions`) for forms
+- **`api` for HTTP** — never `fetch` directly in features
 - **nuqs for URL state** — `searchParamsCache` on server, `useQueryState` on client
 - **Formatting**: single quotes, JSX single quotes, no trailing comma, 2-space tabs

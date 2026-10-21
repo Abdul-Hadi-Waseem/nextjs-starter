@@ -56,7 +56,7 @@ The project follows a feature-based folder structure designed for scalability in
 - Service layer per feature (`api/types.ts` → `api/service.ts` → `api/queries.ts`)
 - Route handlers at `src/app/api/` (for Route Handler or BFF patterns)
 - Mock data in `src/constants/mock-api*.ts` (default, swap via service layer)
-- API client utility in `src/lib/api-client.ts` (for fetch-based patterns)
+- HTTP client `api` in `src/lib/api` (auth cookie sent by default, `{ auth: false }` for public endpoints; see docs/frontend.md)
 
 ### Development Tools
 
@@ -129,10 +129,6 @@ The project follows a feature-based folder structure designed for scalability in
 
 /docs                      # Documentation
 │   └── themes.md          # Theme customization guide
-
-/scripts                   # Dev tooling
-    ├── cleanup.js         # Feature removal, run via `bun run cleanup` (templates in cleanup-templates/, typechecked)
-    └── cleanup-templates/ # Replacement files cleanup.js copies into the repo
 
 Dockerfile                 # Node.js production Dockerfile
 Dockerfile.bun             # Bun production Dockerfile
@@ -298,17 +294,11 @@ src/features/<name>/api/
 
 **`service.ts` is the only file you modify when connecting to a real backend.** Queries and components import from it — they never change.
 
-#### Backend Patterns
+#### Backend
 
-| Pattern                                            | How to implement                                                                            |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| **Server Actions + ORM** (Prisma/Drizzle/Supabase) | Add `'use server'` at top of `service.ts`, call ORM directly                                |
-| **Route Handlers + ORM**                           | `service.ts` calls `/api/` routes via `apiClient`, route handlers call ORM                  |
-| **BFF** (Next.js proxies to Laravel/Go/etc.)       | `service.ts` calls `/api/` routes via `apiClient`, route handlers proxy to external backend |
-| **Direct external API** (frontend-only)            | `service.ts` calls external URL via `fetch()`                                               |
-| **Mock** (default)                                 | `service.ts` calls in-memory fake data stores                                               |
+`service.ts` calls the backend through `api` from `@/lib/api`. It is authenticated by default: the browser sends the httpOnly cookie and server code forwards it. Pass `{ auth: false }` for public endpoints.
 
-Route handlers at `src/app/api/` are ready for patterns 2 and 3. `src/lib/api-client.ts` provides a typed `fetch` wrapper.
+`NEXT_PUBLIC_API_URL` sets the backend. It defaults to this app's mock route handlers in `src/app/api/`, which return 401 without the cookie when `NEXT_PUBLIC_AUTH_ENABLED=true`. Full details: [docs/frontend.md](./docs/frontend.md).
 
 ### Query Key Factories
 
@@ -459,35 +449,6 @@ Both use `output: 'standalone'` in `next.config.ts`. Pass `NEXT_PUBLIC_*` vars a
 ### Build Considerations
 
 - Output: `standalone` (optimized for Docker/self-hosting)
-
----
-
-## Feature Cleanup System
-
-A single `scripts/cleanup.js` file handles removal of optional features:
-
-```bash
-# Interactive mode — prompts for each feature
-node scripts/cleanup.js --interactive
-
-# Remove specific features
-node scripts/cleanup.js themes          # Keep one theme, remove rest
-
-# Remove multiple at once
-node scripts/cleanup.js kanban chat notifications
-
-# Preview without changing files
-node scripts/cleanup.js --dry-run kanban
-
-# List all features
-node scripts/cleanup.js --list
-```
-
-**Safety**: Script requires git repository with at least one commit. Use `--force` to skip.
-
-Replacement files live in `scripts/cleanup-templates/` as real `.ts`/`.tsx` files typechecked by `tsc` and `next build`, so template rot fails loudly instead of shipping broken code.
-
-After cleanup, delete `scripts/cleanup.js` and `scripts/cleanup-templates/` — the dev server message auto-cleans on next start.
 
 ---
 

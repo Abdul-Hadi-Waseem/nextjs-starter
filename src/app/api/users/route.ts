@@ -17,8 +17,11 @@
 
 import { fakeUsers } from '@/constants/mock-api-users';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireSession } from '@/app/api/_mock/auth';
 
 export async function GET(request: NextRequest) {
+  const unauthorized = requireSession(request);
+  if (unauthorized) return unauthorized;
 
   const { searchParams } = request.nextUrl;
 
@@ -40,6 +43,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const unauthorized = requireSession(request);
+  if (unauthorized) return unauthorized;
 
   const body = await request.json();
   const data = await fakeUsers.createUser(body);

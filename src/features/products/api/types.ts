@@ -31,3 +31,9 @@ export type ProductMutationPayload = {
   price: number;
   description: string;
 };
+
+export type ProductMutationResponse = {
+  success: boolean;
+  message: string;
+  product?: import('@/constants/mock-api').Product;
+};

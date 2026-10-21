@@ -1,11 +1,11 @@
 import { Icons } from '@/components/icons';
 
+import type { Role } from '@/features/auth/constants';
+
+/** Who may see a nav item or page. All given conditions must pass. */
 export interface PermissionCheck {
+  role?: Role | Role[];
   permission?: string;
-  plan?: string;
-  feature?: string;
-  role?: string;
-  requireOrg?: boolean;
 }
 
 export interface NavItem {

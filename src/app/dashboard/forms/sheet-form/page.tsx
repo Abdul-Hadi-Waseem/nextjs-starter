@@ -6,7 +6,6 @@ export const metadata = {
 };
 
 export default async function Page() {
-
   return (
     <PageContainer
       pageTitle='Sheet & Dialog Forms'

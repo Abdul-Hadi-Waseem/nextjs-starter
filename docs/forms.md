@@ -17,7 +17,7 @@ field component, and pages use them as one-liners inside `form.AppField`.
 | `src/lib/form-context.ts` | `createFormHookContexts` — `fieldContext`, `formContext`, `useFieldContext`, `useFieldInvalid`, `BaseFieldProps` |
 | `src/components/forms/fields/*.tsx` | 16 field components, each the exact shadcn doc anatomy for its widget |
 | `src/components/forms/submit-button.tsx` | `SubmitButton` — disables while submitting (`form.Subscribe`) |
-| `src/lib/form.ts` | `createFormHook` — exports `useAppForm` / `withForm` with everything registered |
+| `src/lib/form.ts` | `createFormHook` — exports `useAppForm` / `withForm` with the light fields registered (heavy ones are imported directly, see below) |
 
 ## The pattern
 
@@ -241,3 +241,14 @@ give required numbers a human message: `z.number({ error: 'Price is required' })
 | Advanced | `/dashboard/forms/advanced` | Async validation, linked fields (`onChangeListenTo`), nested paths, raw `form.Field` object-row arrays, listener side effects |
 | Multi-Step | `/dashboard/forms/multi-step` | Per-step schemas, validation gate, review step |
 | Sheet Form | `/dashboard/forms/sheet-form` | Sheet + Dialog forms with external submit buttons |
+
+## Heavy fields: import them directly
+
+`ComboboxField` (cmdk), `DatePickerField` / `DateRangeField` (react-day-picker + date-fns), `OtpField` (input-otp) and `FileUploadField` (react-dropzone) are **not registered** in `useAppForm`, so a simple form (like sign-in) doesn't download them. Import them where you need them and render them inside `form.AppField`. They read the field from context, so they work the same:
+
+```tsx
+import { DatePickerField } from '@/components/forms/fields/date-picker-field';
+
+<form.AppField name='birthDate' children={() => <DatePickerField label='Birth Date' />} />
+```
+

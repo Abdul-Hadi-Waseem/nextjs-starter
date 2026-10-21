@@ -14,6 +14,7 @@ import {
   CardFooter
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import Image from 'next/image';
 
 const POKEMON_IDS = [25, 1, 4, 7, 6, 150, 133, 39, 143, 94];
 
@@ -67,8 +68,7 @@ export function PokemonInfo() {
         </CardHeader>
         <CardContent>
           <div className='flex flex-col items-center gap-6 sm:flex-row'>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={data.sprites.front_shiny}
               alt={data.name}
               width={160}

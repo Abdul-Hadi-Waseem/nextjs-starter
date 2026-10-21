@@ -22,7 +22,6 @@ export default async function OverViewLayout({
   bar_stats: React.ReactNode;
   area_stats: React.ReactNode;
 }) {
-
   return (
     <PageContainer>
       <div className='flex flex-1 flex-col gap-4'>

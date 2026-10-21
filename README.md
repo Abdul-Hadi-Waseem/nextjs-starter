@@ -5,7 +5,7 @@
 <br />
 
 <div align="center">
-  <img src="/public/shadcn-dashboard.png" alt="Dashboard screenshot" style="max-width: 100%; border-radius: 8px;" />
+  <img src="/public/images/dashboard.webp" alt="Dashboard screenshot" style="max-width: 100%; border-radius: 8px;" />
 </div>
 
 ## Overview
@@ -63,20 +63,26 @@ bun run dev
 
 The app runs at http://localhost:3000. npm works too; Bun is preferred.
 
+## What's built in
+
+- **API layer** (`src/lib/api`): one client for public and authenticated calls. The httpOnly cookie is sent from the browser and forwarded on the server.
+- **Auth**: route protection in `src/proxy.ts`, sign-in page, global 401 handling, role-based nav and page guards.
+- **Performance gates in CI**: per-route JS budget (`bundle:check`), image policy (`images:check`), bundle analysis report on every push.
+- **Images**: WebP/AVIF only; built-in optimizer, Cloudflare transforms or no resizing, chosen by an env var.
+
 ## Working with Claude Code
 
-The repo ships with:
+- `CLAUDE.md`: the project rules Claude follows.
+- `.claude/skills/`: `nextjs-starter` (how to add features here), `figma-to-code`, plus Next.js, React, shadcn and TanStack skills.
+- `.claude/agents/frontend-reviewer.md`: reviews a feature before you commit.
+- Hooks: every file Claude edits is formatted and linted, and the typecheck runs before Claude finishes.
+- **Figma**: the Figma MCP server is preconfigured in `.mcp.json`. Run `/mcp` → **figma** → **Authenticate** once. It needs a Figma Dev or Full seat; free seats get only ~6 calls a month.
 
-- `CLAUDE.md` and `AGENTS.md`: project conventions for data fetching, forms, tables and icons
-- `.claude/skills/`: skills that teach the agent how to add pages, tables, forms and navigation the project's way, plus Next.js, React and design best practices
+## Documentation
 
-## Removing Demo Features
-
-```bash
-bun run cleanup --list           # see what can be removed
-bun run cleanup --dry-run <name> # preview
-bun run cleanup <name>           # remove
-```
+- [docs/frontend.md](./docs/frontend.md): where queries, mutations, auth, images and components go
+- [docs/forms.md](./docs/forms.md): the form system
+- [docs/themes.md](./docs/themes.md): themes and fonts
 
 ## Deploy
 

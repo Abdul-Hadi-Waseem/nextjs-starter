@@ -1,0 +1,13 @@
+{
+  "$comment": "Max gzipped first-load JS per route, in KB. Checked by `bun run bundle:check` in CI. Set from measured sizes + ~10% headroom; lower them as you trim.",
+  "default": 330,
+  "routes": {
+    "/dashboard/users": 470,
+    "/dashboard/forms/basic": 450,
+    "/dashboard/product": 445,
+    "/dashboard/forms/multi-step": 430,
+    "/dashboard/product/[productId]": 400,
+    "/dashboard/forms/sheet-form": 380,
+    "/dashboard/forms/advanced": 380
+  }
+}

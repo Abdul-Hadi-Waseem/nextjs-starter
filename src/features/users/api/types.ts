@@ -26,3 +26,9 @@ export type UserMutationPayload = {
   role: string;
   status: string;
 };
+
+export type UserMutationResponse = {
+  success: boolean;
+  message: string;
+  user?: import('@/constants/mock-api-users').User;
+};

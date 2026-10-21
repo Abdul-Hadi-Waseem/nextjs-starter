@@ -12,7 +12,6 @@ export const metadata = {
 };
 
 export default async function ReactQueryPage() {
-
   const queryClient = getQueryClient();
 
   // Prefetch on the server — data is ready before client JS loads

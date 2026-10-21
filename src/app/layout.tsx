@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/shadcn-dashboard.png',
+        url: '/og/cover.png',
         width: 3200,
         height: 1600,
         alt: 'Shadcn Dashboard overview page'
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     title: 'Shadcn Dashboard - Next.js Admin Dashboard Template',
     description:
       'Free, open source admin dashboard starter built with Next.js 16, shadcn/ui, Tailwind CSS, and TypeScript.',
-    images: ['/shadcn-dashboard.png']
+    images: ['/og/cover.png']
   }
 };
 

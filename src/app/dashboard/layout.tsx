@@ -1,4 +1,4 @@
-import KBar from '@/components/kbar';
+import { CommandPalette } from '@/components/kbar/lazy';
 import AppSidebar from '@/components/layout/app-sidebar';
 import Header from '@/components/layout/header';
 import { InfoSidebar } from '@/components/layout/info-sidebar';
@@ -21,7 +21,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true';
   return (
-    <KBar>
+    <>
+      <CommandPalette />
       <SidebarProvider defaultOpen={defaultOpen}>
         <a
           href='#main-content'
@@ -38,6 +39,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </InfobarProvider>
         </SidebarInset>
       </SidebarProvider>
-    </KBar>
+    </>
   );
 }

@@ -1,14 +1,16 @@
 'use client';
 import { navGroups } from '@/config/nav-config';
-import { KBarAnimator, KBarPortal, KBarPositioner, KBarProvider, KBarSearch } from 'kbar';
+import { KBarAnimator, KBarPortal, KBarPositioner, KBarProvider, KBarSearch, useKBar } from 'kbar';
 import { Kbd } from '@/components/ui/kbd';
 import { useRouter } from 'next/navigation';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { COMMAND_PALETTE_TOGGLE_EVENT } from './constants';
 import RenderResults from './render-result';
 import useThemeSwitching from './use-theme-switching';
 import { useFilteredNavGroups } from '@/hooks/use-nav';
 
-export default function KBar({ children }: { children: React.ReactNode }) {
+// Loaded lazily by ./lazy.tsx so kbar stays out of every page's first-load JS.
+export default function KBar() {
   const router = useRouter();
   const filteredGroups = useFilteredNavGroups(navGroups);
 
@@ -55,12 +57,20 @@ export default function KBar({ children }: { children: React.ReactNode }) {
 
   return (
     <KBarProvider actions={actions}>
-      <KBarComponent>{children}</KBarComponent>
+      <KBarComponent />
     </KBarProvider>
   );
 }
-const KBarComponent = ({ children }: { children: React.ReactNode }) => {
+const KBarComponent = () => {
   useThemeSwitching();
+  const { query } = useKBar();
+
+  // The header search button opens the palette without importing kbar itself.
+  useEffect(() => {
+    const toggle = () => query.toggle();
+    window.addEventListener(COMMAND_PALETTE_TOGGLE_EVENT, toggle);
+    return () => window.removeEventListener(COMMAND_PALETTE_TOGGLE_EVENT, toggle);
+  }, [query]);
 
   return (
     <>
@@ -88,7 +98,6 @@ const KBarComponent = ({ children }: { children: React.ReactNode }) => {
           </KBarAnimator>
         </KBarPositioner>
       </KBarPortal>
-      {children}
     </>
   );
 };

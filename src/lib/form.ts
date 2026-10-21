@@ -9,11 +9,7 @@ import { CheckboxField } from '@/components/forms/fields/checkbox-field';
 import { SwitchField } from '@/components/forms/fields/switch-field';
 import { RadioGroupField } from '@/components/forms/fields/radio-group-field';
 import { SliderField } from '@/components/forms/fields/slider-field';
-import { ComboboxField } from '@/components/forms/fields/combobox-field';
-import { DatePickerField, DateRangeField } from '@/components/forms/fields/date-picker-field';
-import { OtpField } from '@/components/forms/fields/otp-field';
 import { ColorField } from '@/components/forms/fields/color-field';
-import { FileUploadField } from '@/components/forms/fields/file-upload-field';
 import { CheckboxGroupField } from '@/components/forms/fields/checkbox-group-field';
 import { TagsField } from '@/components/forms/fields/tags-field';
 import { ToggleGroupField } from '@/components/forms/fields/toggle-group-field';
@@ -33,6 +29,16 @@ import { SubmitButton } from '@/components/forms/submit-button';
  * Every component's markup is the shadcn TanStack Form doc anatomy — for
  * one-off custom fields, drop down to the raw `form.Field` render prop and
  * compose the `Field` primitives directly (see docs/forms.md).
+ *
+ * Heavy fields are NOT registered here, so every form doesn't pay for them.
+ * Import them directly and render them inside `form.AppField`:
+ * ComboboxField (cmdk), DatePickerField / DateRangeField (react-day-picker),
+ * OtpField (input-otp), FileUploadField (react-dropzone).
+ *
+ * ```tsx
+ * import { ComboboxField } from '@/components/forms/fields/combobox-field';
+ * <form.AppField name='framework' children={() => <ComboboxField label='Framework' options={…} />} />
+ * ```
  */
 export const { useAppForm, withForm } = createFormHook({
   fieldContext,
@@ -45,12 +51,7 @@ export const { useAppForm, withForm } = createFormHook({
     SwitchField,
     RadioGroupField,
     SliderField,
-    ComboboxField,
-    DatePickerField,
-    DateRangeField,
-    OtpField,
     ColorField,
-    FileUploadField,
     CheckboxGroupField,
     TagsField,
     ToggleGroupField
