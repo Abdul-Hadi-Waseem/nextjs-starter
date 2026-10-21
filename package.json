@@ -16,11 +16,12 @@
     "lint:strict": "oxlint --deny-warnings",
     "format": "oxfmt --write . '!**/*.md' '!**/*.mdc' '!**/*.mdx' '!**/*.yml' '!**/*.yaml'",
     "format:check": "oxfmt --check . '!**/*.md' '!**/*.mdc' '!**/*.mdx' '!**/*.yml' '!**/*.yaml'",
-    "prepare": "husky",
     "analyze": "next analyze",
-    "analyze:ci": "next analyze --output",
     "bundle:check": "node .github/bundle-budget.mjs",
-    "images:check": "node .github/check-images.mjs"
+    "images:check": "node .github/check-images.mjs",
+    "prepare": "husky",
+    "setup": "bun install && husky",
+    "analyze:report": "next analyze --output"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -76,7 +77,11 @@
     "sharp": "^0.35.5"
   },
   "lint-staged": {
-    "!(scripts)/**/*.{js,jsx,tsx,ts,css,less,scss,sass}": [
+    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+      "oxfmt --write",
+      "oxlint"
+    ],
+    "*.{css,json}": [
       "oxfmt --write"
     ]
   }

@@ -130,7 +130,7 @@ Components land in `src/components/ui/`. Import icons only from `@/components/ic
 
 ## Images
 
-**Formats.** WebP or AVIF for photos and screenshots, SVG for icons and logos. PNG/JPG/GIF are blocked except in `public/og/` (social preview images, which some platforms still require), and every image must be under 300 KB. CI enforces this with `bun run images:check`. Convert before committing, e.g. `bunx sharp-cli -i in.png -o out.webp` or any image tool.
+**Formats.** WebP or AVIF for photos and screenshots, SVG for icons and logos. PNG/JPG/GIF are blocked except in `public/og/` (social preview images, which some platforms still require), and every image must be under 300 KB. The pre-push hook enforces this with `bun run images:check`. Convert before committing, e.g. `bunx sharp-cli -i in.png -o out.webp` or any image tool.
 
 **Where.** `public/images/` for files served at a fixed URL (`/images/hero.webp`). Feature images can also live next to the feature and be imported statically, which gives Next.js the size and a blur placeholder.
 
@@ -148,12 +148,12 @@ With the built-in optimizer, **every pod runs sharp itself and keeps its own cac
 
 ## Bundle size
 
-Every route has a budget for its **gzipped first-load JS** in `bundle-budget.json`. CI fails when a route goes over.
+Every route has a budget for its **gzipped first-load JS** in `bundle-budget.json`. The pre-push hook blocks the push when a route goes over.
 
 ```bash
 bun run build && bun run bundle:check   # per-route table vs budget
 bun run analyze                         # interactive analyzer: find what grew
-bun run analyze:ci                      # static report (CI uploads it as an artifact)
+bun run analyze:report                  # static report in .next/diagnostics/analyze
 ```
 
 Rules that keep pages light:
@@ -161,7 +161,7 @@ Rules that keep pages light:
 - Heavy client-only libraries load with `next/dynamic`: charts (`src/features/overview/components/lazy-graphs.tsx`) and the Cmd+K palette (`src/components/kbar/lazy.tsx`).
 - Heavy form fields (Combobox, DatePicker, DateRange, Otp, FileUpload) are imported where they're used, not registered globally (see docs/forms.md).
 - Keep `'use client'` on the smallest component that needs it.
-- Don't raise a budget to make CI pass. Find what grew first, and only raise it on purpose.
+- Don't raise a budget just to get a push through. Find what grew first, and only raise it on purpose.
 
 ## Access control (roles)
 
@@ -174,4 +174,4 @@ Rules that keep pages light:
 
 ## Package manager
 
-This repo uses **Bun** (`bun.lock` is committed and CI uses it): `bun install`, `bun run dev`, `bun run <script>`.
+This repo uses **Bun** (`bun.lock` is committed): `bun install`, `bun run dev`, `bun run <script>`.

@@ -1,5 +1,5 @@
 {
-  "$comment": "Max gzipped first-load JS per route, in KB. Checked by `bun run bundle:check` in CI. Set from measured sizes + ~10% headroom; lower them as you trim.",
+  "$comment": "Max gzipped first-load JS per route, in KB. Checked by `bun run bundle:check` in the pre-push hook. Set from measured sizes + ~10% headroom; lower them as you trim.",
   "default": 330,
   "routes": {
     "/dashboard/users": 470,

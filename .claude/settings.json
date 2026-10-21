@@ -9,7 +9,7 @@
       "Bash(bun run lint:fix)",
       "Bash(bun run format)",
       "Bash(bun run format:check)",
-      "Bash(bun run analyze:ci)",
+      "Bash(bun run analyze:report)",
       "Bash(bun run bundle:check)",
       "Bash(bun run images:check)",
       "Bash(bunx shadcn@latest add:*)"

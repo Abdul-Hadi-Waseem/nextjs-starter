@@ -1,1 +1,7 @@
+# Every quality gate. A failure blocks the push.
+bun run format:check
+bun run typecheck
+bun run lint
+bun run images:check
 bun run build
+bun run bundle:check

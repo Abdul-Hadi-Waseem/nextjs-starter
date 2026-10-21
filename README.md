@@ -56,18 +56,20 @@ On GitHub, click **Use this template**, or clone the repo:
 ```bash
 git clone https://github.com/Abdul-Hadi-Waseem/nextjs-starter.git
 cd nextjs-starter
-bun install
+bun run setup            # installs deps and enables the git hooks
 cp env.example.txt .env.local
 bun run dev
 ```
 
-The app runs at http://localhost:3000. npm works too; Bun is preferred.
+The app runs at http://localhost:3000.
+
+**Git hooks** (Husky): `pre-commit` formats and lints staged files; `pre-push` runs every gate (format, typecheck, lint, image policy, build, bundle budget) and blocks the push if any fail. `git push --no-verify` skips it, so treat that as an emergency exit only. npm works too; Bun is preferred.
 
 ## What's built in
 
 - **API layer** (`src/lib/api`): one client for public and authenticated calls. The httpOnly cookie is sent from the browser and forwarded on the server.
 - **Auth**: route protection in `src/proxy.ts`, sign-in page, global 401 handling, role-based nav and page guards.
-- **Performance gates in CI**: per-route JS budget (`bundle:check`), image policy (`images:check`), bundle analysis report on every push.
+- **Performance gates on every push** (Husky pre-push): per-route JS budget (`bundle:check`) and image policy (`images:check`).
 - **Images**: WebP/AVIF only; built-in optimizer, Cloudflare transforms or no resizing, chosen by an env var.
 
 ## Working with Claude Code

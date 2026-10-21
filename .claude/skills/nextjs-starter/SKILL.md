@@ -328,7 +328,7 @@ const form = useAppForm({
 
 ---
 
-## 6. Performance Rules (enforced in CI)
+## 6. Performance Rules (enforced by the pre-push hook)
 
 - **Bundle budget**: `bun run bundle:check` fails when a route's gzipped first-load JS goes over `bundle-budget.json`. Never just raise a limit; find what grew first (`bun run analyze`).
 - **Heavy client-only libraries** (charts, editors, command palettes) load with `next/dynamic`. See `src/features/overview/components/lazy-graphs.tsx` and `src/components/kbar/lazy.tsx`.
