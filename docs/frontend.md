@@ -108,7 +108,7 @@ The backend issues the auth token as an **httpOnly cookie**. The frontend never 
 Two production safeguards:
 
 - **The mock API is off in production.** Every mock handler answers 404 unless `ENABLE_MOCK_API=true`. Only set that for a demo deployment; the mock login accepts any password.
-- **`NEXT_PUBLIC_API_URL` is required to build for production.** `bun run build` fails without it, so a deployment can't silently call `localhost`.
+- **`NEXT_PUBLIC_API_URL` is required.** `src/env.ts` validates it on dev start and build, so a deployment can't silently call `localhost`.
 
 **Backend checklist** for cookie auth to work and stay safe:
 
@@ -119,9 +119,10 @@ Two production safeguards:
 
 ## Environment variables
 
-- Only variables prefixed with `NEXT_PUBLIC_` reach the browser, and anyone can read them.
-- Secrets (API keys, backend tokens) get no prefix and may only be used in server code.
-- Document every variable in `env.example.txt`.
+- **Every variable is declared in `src/env.ts`** with a zod schema (`@t3-oss/env-nextjs`). `bun run dev` and `bun run build` stop with "Invalid environment variables" when one is missing or wrong. Start with `cp env.example.txt .env.local`.
+- Read variables through `env` from `@/env`, never `process.env`.
+- Only `NEXT_PUBLIC_` variables (the `client` block) reach the browser, and anyone can read them. Secrets go in the `server` block; reading one in client code throws.
+- Adding a variable: add it to `src/env.ts` (schema + `runtimeEnv`) and to `env.example.txt`.
 
 ## UI components (shadcn/ui)
 
@@ -135,9 +136,11 @@ Components land in `src/components/ui/`. Import icons only from `@/components/ic
 
 ## Images
 
+**Location.** Images live only in `public/` (usually `public/images/`). An image file anywhere else in the app fails `bun run images:check`.
+
 **Formats.** WebP or AVIF for photos and screenshots, SVG for icons and logos. PNG/JPG/GIF are blocked except in `public/og/` (social preview images, which some platforms still require), and every image must be under 300 KB. The pre-push hook enforces this with `bun run images:check`. Convert before committing, e.g. `bunx sharp-cli -i in.png -o out.webp` or any image tool.
 
-**Where.** `public/images/` for files served at a fixed URL (`/images/hero.webp`). Feature images can also live next to the feature and be imported statically, which gives Next.js the size and a blur placeholder.
+**Referencing.** Use the public path (`/images/hero.webp`) with `next/image` and give `width`/`height` (or `fill` + `sizes`).
 
 **Always `next/image`, with `sizes`.** A raw `<img>` is a lint error. `sizes` tells the browser which width to download (for example `sizes='80px'` for a thumbnail). Images never go into the JavaScript bundle; they only cost page weight on pages that show them.
 
@@ -176,6 +179,14 @@ Rules that keep pages light:
 - Hiding links is UX only. **The backend must enforce the same rule** on its endpoints.
 - With `NEXT_PUBLIC_AUTH_ENABLED=false` (demo), everything is visible.
 - Mock backend: emails starting with `admin` sign in as admin, any other email as member.
+
+## Security headers
+
+`next.config.ts` sends these on every response (built in `src/config/security-headers.ts`): Content-Security-Policy, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, and HSTS in production.
+
+- The CSP allows the API origin (`NEXT_PUBLIC_API_URL`), the image hosts in `src/config/images.ts` and the Cloudflare image origin. Add a new third-party origin there, not inline.
+- It's a static CSP, so scripts allow `'unsafe-inline'` (Next.js injects inline hydration scripts). For a stricter policy, move to a nonce-based CSP in `src/proxy.ts`; see `node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md`.
+- Behind Cloudflare you can also turn on HSTS in its SSL/TLS settings; keep the CSP here, because it depends on what the app loads.
 
 ## Package manager
 

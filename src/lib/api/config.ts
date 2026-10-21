@@ -1,10 +1,11 @@
-// Backend base URL. Defaults to this app's own mock route handlers (src/app/api),
-// so the demo runs without a backend. Point it at your real API in .env.local.
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api';
+import { env } from '@/env';
+
+// Backend base URL (validated in src/env.ts). Locally it points at this app's
+// own mock route handlers (src/app/api).
+export const API_URL = env.NEXT_PUBLIC_API_URL;
 
 export const AUTH = {
-  enabled: process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true',
-  cookieName: process.env.AUTH_COOKIE_NAME ?? 'access_token',
+  enabled: env.NEXT_PUBLIC_AUTH_ENABLED,
   signInPath: '/auth/sign-in',
   homePath: '/dashboard/overview'
 } as const;

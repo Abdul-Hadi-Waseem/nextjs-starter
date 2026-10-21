@@ -332,7 +332,7 @@ const form = useAppForm({
 
 - **Bundle budget**: `bun run bundle:check` fails when a route's gzipped first-load JS goes over `bundle-budget.json`. Never just raise a limit; find what grew first (`bun run analyze`).
 - **Heavy client-only libraries** (charts, editors, command palettes) load with `next/dynamic`. See `src/features/overview/components/lazy-graphs.tsx` and `src/components/kbar/lazy.tsx`.
-- **Images**: WebP/AVIF/SVG only (`bun run images:check`, max 300 KB; PNG/JPG only in `public/og/`). Always `next/image` (raw `<img>` is a lint error), with `sizes` set.
+- **Images**: files only in `public/` (usually `public/images/`); WebP/AVIF/SVG only (`bun run images:check`, max 300 KB; PNG/JPG only in `public/og/`). Always `next/image` (raw `<img>` is a lint error), with `sizes` set.
 - **Image loader** via `NEXT_PUBLIC_IMAGE_LOADER`: empty = Next optimizer, `cloudflare` = edge transforms, `none` = no resizing. Don't hardcode a loader in components.
 
 ---
@@ -343,5 +343,7 @@ const form = useAppForm({
 - **Server components by default** — only add `'use client'` when needed
 - **React Query for data fetching** — `useQuery` + `shallow: true` for tables, `useMutation` (spreading shared `mutationOptions`) for forms
 - **`api` for HTTP** — never `fetch` directly in features
+- **Env** — read variables via `env` from `@/env` (zod-validated in `src/env.ts`), never `process.env`; add new ones to `src/env.ts` and `env.example.txt`
+- **New third-party origin** (API, images, scripts) — add it in `src/config/security-headers.ts` / `src/config/images.ts`, or the CSP will block it
 - **nuqs for URL state** — `searchParamsCache` on server, `useQueryState` on client
 - **Formatting**: single quotes, JSX single quotes, no trailing comma, 2-space tabs

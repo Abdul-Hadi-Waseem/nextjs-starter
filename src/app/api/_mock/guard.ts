@@ -3,10 +3,10 @@
 // deployment that forgot NEXT_PUBLIC_API_URL would expose a login that accepts
 // any password.
 import { NextResponse } from 'next/server';
+import { env } from '@/env';
 import { HTTP_STATUS } from '@/lib/api/config';
 
-export const MOCK_API_ENABLED =
-  process.env.NODE_ENV !== 'production' || process.env.ENABLE_MOCK_API === 'true';
+export const MOCK_API_ENABLED = process.env.NODE_ENV !== 'production' || env.ENABLE_MOCK_API;
 
 export function mockApiDisabled() {
   if (MOCK_API_ENABLED) return null;

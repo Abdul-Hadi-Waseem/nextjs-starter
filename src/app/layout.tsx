@@ -9,6 +9,7 @@ import { cookies } from 'next/headers';
 import NextTopLoader from 'nextjs-toploader';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import '../styles/globals.css';
+import { env } from '@/env';
 
 const META_THEME_COLORS = {
   light: '#ffffff',
@@ -16,15 +17,15 @@ const META_THEME_COLORS = {
 };
 
 export const metadata: Metadata = {
-  ...(process.env.NEXT_PUBLIC_APP_URL
-    ? { metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL) }
-    : {}),
+  ...(env.NEXT_PUBLIC_APP_URL ? { metadataBase: new URL(env.NEXT_PUBLIC_APP_URL) } : {}),
   title: {
     default: 'Shadcn Dashboard - Next.js Admin Dashboard Template',
     template: '%s | Shadcn Dashboard'
   },
   description:
     'Free, open source admin dashboard starter built with Next.js 16, shadcn/ui, Tailwind CSS, and TypeScript.',
+  // Images live only in public/ (enforced by `bun run images:check`).
+  icons: { icon: '/favicon.ico' },
   openGraph: {
     title: 'Shadcn Dashboard - Next.js Admin Dashboard Template',
     description:
@@ -34,8 +35,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: '/og/cover.png',
-        width: 3200,
-        height: 1600,
+        width: 1200,
+        height: 630,
         alt: 'Shadcn Dashboard overview page'
       }
     ]

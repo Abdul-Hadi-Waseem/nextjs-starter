@@ -3,7 +3,9 @@
 // Cloudflare resizes and converts at the edge, so the Next.js server does no image work.
 // Requires Image Transformations enabled on the Cloudflare zone.
 
-const CF_BASE = process.env.NEXT_PUBLIC_CF_IMAGE_BASE ?? '';
+import { env } from '@/env';
+
+const CF_BASE = env.NEXT_PUBLIC_CF_IMAGE_BASE ?? '';
 const DEFAULT_QUALITY = 75;
 
 type LoaderProps = { src: string; width: number; quality?: number };

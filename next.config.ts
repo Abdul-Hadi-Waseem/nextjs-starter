@@ -1,25 +1,21 @@
 import type { NextConfig } from 'next';
-import { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_BUILD } from 'next/constants';
+import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
+// Validates every env var at dev start and build time (see src/env.ts).
+import { env } from './src/env';
+import { REMOTE_IMAGE_HOSTS } from './src/config/images';
+import { securityHeaders } from './src/config/security-headers';
 
 export default function nextConfig(phase: string): NextConfig {
-  // A production build must know the real backend; the dev default (this app's
-  // mock API on localhost) would silently ship otherwise.
-  if (phase === PHASE_PRODUCTION_BUILD && !process.env.NEXT_PUBLIC_API_URL) {
-    throw new Error(
-      'NEXT_PUBLIC_API_URL is not set. Set it to your backend URL (see env.example.txt) before building for production.'
-    );
-  }
-
   // NEXT_PUBLIC_IMAGE_LOADER picks who resizes images for next/image:
   //   (empty)    Next.js built-in optimizer: sharp runs on every server/pod, each with its own cache
   //   cloudflare Cloudflare Image Transformations at the edge (production only; dev uses built-in)
   //   none       no resizing at all (sharp never runs); images are served as committed,
   //              which the image policy (bun run images:check) keeps small WebP/AVIF
-  const imageLoader = process.env.NEXT_PUBLIC_IMAGE_LOADER;
+  const imageLoader = env.NEXT_PUBLIC_IMAGE_LOADER;
   const useCloudflareImages = imageLoader === 'cloudflare' && phase !== PHASE_DEVELOPMENT_SERVER;
 
   return {
-    output: process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
+    output: env.BUILD_STANDALONE ? 'standalone' : undefined,
     images: {
       // Serve AVIF where the browser supports it, WebP otherwise.
       formats: ['image/avif', 'image/webp'],
@@ -27,18 +23,21 @@ export default function nextConfig(phase: string): NextConfig {
       minimumCacheTTL: 60 * 60 * 24 * 31,
       unoptimized: imageLoader === 'none',
       ...(useCloudflareImages && { loader: 'custom', loaderFile: './src/lib/image-loader.ts' }),
-      remotePatterns: [
+      remotePatterns: REMOTE_IMAGE_HOSTS.map((host) => ({ ...host }))
+    },
+    poweredByHeader: false,
+    async headers() {
+      return [
         {
-          protocol: 'https',
-          hostname: 'api.slingacademy.com',
-          port: ''
-        },
-        {
-          protocol: 'https',
-          hostname: 'raw.githubusercontent.com',
-          pathname: '/PokeAPI/sprites/**'
+          source: '/(.*)',
+          headers: securityHeaders({
+            isDev: phase === PHASE_DEVELOPMENT_SERVER,
+            apiUrl: env.NEXT_PUBLIC_API_URL,
+            imageHosts: REMOTE_IMAGE_HOSTS,
+            cfImageBase: env.NEXT_PUBLIC_CF_IMAGE_BASE
+          })
         }
-      ]
+      ];
     },
     transpilePackages: ['geist'],
     compiler: {

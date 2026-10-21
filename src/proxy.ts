@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { env } from '@/env';
 import { AUTH } from '@/lib/api/config';
 
 const PROTECTED_PREFIX = '/dashboard';
@@ -10,7 +11,7 @@ export function proxy(req: NextRequest) {
   if (!AUTH.enabled) return NextResponse.next();
 
   const { pathname, search } = req.nextUrl;
-  const hasSession = req.cookies.has(AUTH.cookieName);
+  const hasSession = req.cookies.has(env.AUTH_COOKIE_NAME);
 
   if (pathname.startsWith(PROTECTED_PREFIX) && !hasSession) {
     const signIn = new URL(AUTH.signInPath, req.url);

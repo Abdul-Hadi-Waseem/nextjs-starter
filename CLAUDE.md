@@ -23,7 +23,7 @@ This is a Next.js 16 + shadcn/ui admin dashboard starter kit. Package manager: *
 - **Formatting** — single quotes, JSX single quotes, no trailing comma, 2-space indent
 - **Access control** — `access: { role: ROLE.X }` on nav items + `await requireAccess({ role: ROLE.X })` on the page; the backend enforces it too
 - **Performance** — `bun run bundle:check` must pass (per-route budget in `bundle-budget.json`); heavy client-only libraries via `next/dynamic`; heavy form fields imported directly, not registered in `@/lib/form`
-- **Images** — `next/image` with `sizes` (raw `<img>` is a lint error); WebP/AVIF/SVG only, under 300 KB (`bun run images:check`); loader chosen by `NEXT_PUBLIC_IMAGE_LOADER`, never hardcoded
+- **Images** — files only in `public/`; `next/image` with `sizes` (raw `<img>` is a lint error); WebP/AVIF/SVG only, under 300 KB (`bun run images:check`); loader chosen by `NEXT_PUBLIC_IMAGE_LOADER`, never hardcoded
 
 ## Claude setup in this repo
 
@@ -31,4 +31,5 @@ This is a Next.js 16 + shadcn/ui admin dashboard starter kit. Package manager: *
 - Agent: `.claude/agents/frontend-reviewer.md` — run it after a feature, before committing.
 - Hooks (`.claude/settings.json`): every edited file is formatted and linted; the typecheck runs before Claude finishes.
 - MCP: Figma's remote server in `.mcp.json` (authenticate once via `/mcp`; needs a Dev or Full seat).
-
+- **Env** — declare every variable in `src/env.ts` (zod) and read it via `env` from `@/env`, never `process.env`; add new ones to `env.example.txt` too
+- **Security headers / CSP** — `src/config/security-headers.ts`; add third-party origins there and image hosts in `src/config/images.ts`
