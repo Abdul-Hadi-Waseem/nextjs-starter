@@ -10,48 +10,46 @@ This skill encodes the exact patterns and conventions used in this Next.js 16 + 
 
 ## Quick Reference: What Goes Where
 
-| Task              | Location                                                    |
+Where a new file goes (page, route handler, server action, query/mutation, component, hook, store, schema, constant, mock data, image, style token) and the `shared/` nearest-common-parent rule: the "I'm adding X → put it in Y" table in [docs/frontend.md "Folder structure"](../../../docs/frontend.md#folder-structure). Check it before creating any file.
+
+Existing shared pieces to reuse:
+
+| Piece             | Location                                                    |
 | ----------------- | ----------------------------------------------------------- |
-| New page          | `src/app/dashboard/<name>/page.tsx`                         |
-| API types         | `src/features/<name>/api/types.ts`                          |
-| Backend calls     | `src/features/<name>/api/service.ts` (uses `api`)           |
-| Query options     | `src/features/<name>/api/queries.ts`                        |
-| Mutation options  | `src/features/<name>/api/mutations.ts`                      |
-| Feature UI        | `src/features/<name>/components/`                           |
-| Zod schemas       | `src/features/<name>/schemas/`                              |
 | HTTP client       | `src/lib/api` (`api.get/post/put/patch/delete`)             |
-| Mock backend      | `src/app/api/<name>/route.ts` + `src/constants/mock-api-*`  |
-| Auth / roles      | `src/features/auth` (`ROLE`, `hasAccess`, `requireAccess`)  |
-| Nav item          | `src/config/nav-config.ts`                                  |
-| Search params     | `src/lib/searchparams.ts`                                   |
 | Query client      | `src/lib/query-client.ts`                                   |
-| Theme CSS         | `src/styles/themes/<name>.css`                              |
+| Auth / roles      | `src/features/auth` (`ROLE`, `hasAccess`, `requireAccess`)  |
+| Mock helpers      | `src/app/api/_mock/` (`mockApiDisabled`, `requireSession`)  |
+| Nav item          | `src/config/nav-config.ts`                                  |
 | Form components   | `src/components/forms/`                                     |
-| Table components  | `src/components/data-table/`                                |
+| Table components  | `src/components/data-table/` + `src/lib/data-table/`        |
 | Icons registry    | `src/components/icons.tsx`                                  |
-| Images            | `public/images/*.webp` (rendered with `next/image`)         |
 
 ---
 
 ## Adding a New Feature (End-to-End)
 
-When a user asks to add a feature (e.g. "add an orders page"), do all of these in order:
+When a user asks to add a feature (e.g. "add an orders page"), copy the shape of `src/features/partners` (table + detail) or `src/features/payouts` (table + sheet form); `src/app/dashboard/examples` holds extra reference pages (every form field, multi-step, React Query against a public API). Do all of these in order:
 
+0. **Colors**: any new color becomes a semantic token in `src/styles/theme.css` (`:root` + `.dark` values and `--color-<name>` in `@theme inline`), then use `bg-<name>` / `text-<name>`. Never hex in components. New shadcn components: `bunx shadcn@latest add`, then add a token-based variant to their `cva()`.
 1. **Types**: `src/features/<name>/api/types.ts` (response, filters, mutation payload).
 2. **Service**: `src/features/<name>/api/service.ts`. Every call goes through `api` from `@/lib/api`; never `fetch` directly. Authenticated by default; `{ auth: false }` for public endpoints.
 3. **Queries**: `api/queries.ts`, with a key factory (`orderKeys.all/list/detail`) plus `queryOptions`.
 4. **Mutations**: `api/mutations.ts`, with `mutationOptions` that invalidate `orderKeys.all` on success.
-5. **Mock backend** (only if the real endpoint doesn't exist yet): `src/app/api/<name>/route.ts`. Call `requireSession(request)` first, like `src/app/api/products/route.ts`.
-6. **Components**: listing (server prefetch + `HydrationBoundary`), table, form, under `src/features/<name>/components/`.
-7. **Page**: `src/app/dashboard/<name>/page.tsx`. If it's restricted: `await requireAccess({ role: ROLE.ADMIN })` first.
-8. **Search params**: `src/lib/searchparams.ts` (if it has a table or filters).
+5. **Mock backend** (only if the real endpoint doesn't exist yet): `src/app/api/<name>/route.ts`. Call `mockApiDisabled()` then `requireSession(request)` first, like `src/app/api/partners/route.ts`.
+6. **Components**: listing (server prefetch + `HydrationBoundary`), table, form, under `src/features/<name>/components/`. Every other new file (action, hook, store, constant, schema, mock data) goes where the table in docs/frontend.md "Folder structure" says.
+7. **Page**: `src/app/dashboard/<name>/page.tsx` + `loading.tsx`, both wrapped in a `<Name>PageShell` component (title, description, header action) so the header doesn't move when data loads. If it's restricted: `await requireAccess({ role: ROLE.ADMIN })` first.
+8. **Search params** (if it has a table or filters): parsers in `src/features/<name>/lib/search-params.ts`, `createSearchParamsCache` in `search-params-cache.ts` (see `src/features/partners/lib/`).
 9. **Navigation**: `src/config/nav-config.ts`, with the same `access` as the page guard.
 10. **Icon**: `src/components/icons.tsx` (if a new one is needed).
 11. **Check**: `bun run typecheck && bun run lint && bun run build && bun run bundle:check`.
+12. **Review**: run the `frontend-reviewer` agent (`/review`; other agents: the "Before you finish" checklist in AGENTS.md). Fix every Must-fix item, re-run the gates, and repeat until the verdict is **ready**.
 
 ---
 
 ## 1. Data Fetching with React Query
+
+Full guide: `docs/data-fetching.md` (caching rules, optimistic updates, pagination, infinite, polling, cancellation, server actions, route handlers). Working examples: `src/features/examples/` (pages under `/dashboard/examples/data-fetching/*` and `/dashboard/examples/server/*`).
 
 The project uses **TanStack React Query** for data fetching with server-side prefetching and client-side cache management. This is the default pattern for all new pages.
 
@@ -89,17 +87,14 @@ export const entitiesQueryOptions = (filters: EntityFilters) =>
 ```tsx
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { getQueryClient } from '@/lib/query-client';
-import { searchParamsCache } from '@/lib/searchparams';
 import { entitiesQueryOptions } from '../api/queries';
+import { entitiesSearchParamsCache } from '../lib/search-params-cache';
+import { toEntityFilters } from '../lib/search-params';
 import { EntityTable, EntityTableSkeleton } from './entity-table';
 import { Suspense } from 'react';
 
-export default function EntityListingPage() {
-  const page = searchParamsCache.get('page');
-  const search = searchParamsCache.get('name');
-  const pageLimit = searchParamsCache.get('perPage');
-
-  const filters = { page, limit: pageLimit, ...(search && { search }) };
+export function EntityListing() {
+  const filters = toEntityFilters(entitiesSearchParamsCache.all());
 
   const queryClient = getQueryClient();
   void queryClient.prefetchQuery(entitiesQueryOptions(filters));
@@ -196,8 +191,8 @@ Pages are **server components** by default. They use `PageContainer` and accept 
 
 ```tsx
 import PageContainer from '@/components/layout/page-container';
-import EntityListingPage from '@/features/entities/components/entity-listing';
-import { searchParamsCache } from '@/lib/searchparams';
+import { EntityListing } from '@/features/entities/components/entity-listing';
+import { entitiesSearchParamsCache } from '@/features/entities/lib/search-params-cache';
 import type { SearchParams } from 'nuqs/server';
 
 export const metadata = { title: 'Dashboard: Entities' };
@@ -206,7 +201,7 @@ type PageProps = { searchParams: Promise<SearchParams> };
 
 export default async function Page(props: PageProps) {
   const searchParams = await props.searchParams;
-  searchParamsCache.parse(searchParams);
+  entitiesSearchParamsCache.parse(searchParams);
 
   return (
     <PageContainer
@@ -214,7 +209,7 @@ export default async function Page(props: PageProps) {
       pageTitle='Entities'
       pageDescription='Manage entities (React Query + nuqs table pattern.)'
     >
-      <EntityListingPage />
+      <EntityListing />
     </PageContainer>
   );
 }
@@ -224,7 +219,7 @@ export default async function Page(props: PageProps) {
 
 ## 3. Data Tables
 
-Tables use TanStack Table v9 (DiceUI data table) with `useDataTable` hook and `nuqs` for URL state. Type columns with `DataTableFeatures` from `@/lib/data-table-features`.
+Tables use TanStack Table v9 (DiceUI data table) with `useDataTable` hook and `nuqs` for URL state. Type columns with `DataTableFeatures` from `@/lib/data-table/features`.
 
 ### Column Definitions
 
@@ -310,8 +305,7 @@ const form = useAppForm({
 - Field-level validators/listeners (async checks, `onChangeListenTo` linked fields) go on the `form.AppField` element; function validators return `{ message: '…' }` objects.
 - One-off custom fields (object-row arrays, bespoke UI) drop down to raw `form.Field` render props composing `Field`/`FieldLabel`/`FieldError` from `@/components/ui/field` — `data-invalid` on Field, `aria-invalid` on the control, `{isInvalid && <FieldError errors={field.state.meta.errors} />}`.
 - Large forms split into typed sections with `withForm` from `@/lib/form` (section receives `form` as a prop; field names stay compile-checked).
-- Sheet/Dialog forms: submit button in the footer via the HTML `form` attribute (`<Button type='submit' form='my-form-id'>`).
-- Multi-step: `useFormStepper(stepSchemas, { fullSchema })` from `@/hooks/use-stepper`; route every submit through `handleNextStepOrSubmit(form)`.
+- Sheet/Dialog forms: submit button in the footer via the HTML `form` attribute (`<Button type='submit' form='my-form-id'>`). Example: `src/features/payouts/components/payout-form.tsx` (sheet form, heavy fields, server field errors).
 - Match the widget to the path's value type — the compiler checks the `name` path but NOT the widget/value pairing (a `SwitchField` on a string path compiles and misbehaves).
 - Never call `useState` inside a render prop — extract stateful controls into components.
 
@@ -319,10 +313,10 @@ const form = useAppForm({
 
 ## 5. Navigation and Access Control
 
-- **Nav**: `src/config/nav-config.ts`. Add `access: { role: ROLE.ADMIN }` or `{ permission: 'users:write' }`. `useFilteredNavGroups` (`src/hooks/use-nav.ts`) hides items the signed-in user (`/auth/me`) can't access. The Cmd+K palette uses the same filter.
+- **Nav**: `src/config/nav-config.ts`. Add `access: { role: ROLE.ADMIN }` or `{ permission: 'team:write' }`. `useFilteredNavGroups` (`src/hooks/use-nav.ts`) hides items the signed-in user (`/auth/me`) can't access. The Cmd+K palette uses the same filter.
 - **Page guard**: `await requireAccess({ role: ROLE.ADMIN })` at the top of the server page. Signed-out users go to sign-in; users without access get a 404.
 - Hiding UI is only UX. The backend must enforce the same rule.
-- **Search params**: `src/lib/searchparams.ts`. Add new params with `parseAsString`/`parseAsInteger`.
+- **Search params**: per feature in `src/features/<name>/lib/search-params.ts`. Add new params with `parseAsString`/`parseAsInteger`.
 - **Icons**: `src/components/icons.tsx` is the single source of truth. Never import `@tabler/icons-react` directly.
 - **Themes**: `src/styles/themes/<name>.css` with OKLCH colors, registered in `theme.config.ts`.
 
@@ -345,7 +339,7 @@ const form = useAppForm({
 
 ## 8. Where Things Go (components and state)
 
-- One feature → `src/features/<name>/components/`; two or more → `src/components/`. Start in the feature.
+- Placement follows the nearest-common-parent rule in docs/frontend.md "Folder structure": one feature → inside it; 2+ sub-modules of one area → that area's `shared/`; 2+ features → `src/components`, `src/hooks`, `src/lib`. Start in the feature.
 - State: TanStack Query (server data), nuqs (URL), TanStack Form (forms). Zustand only for client-only state shared across components: `src/stores/` (shared) or `src/features/<name>/stores/`. Persisted stores use `skipHydration` + `PreferencesHydrator` (see `src/stores/ui-preferences.ts`).
 
 ---
@@ -356,7 +350,7 @@ const form = useAppForm({
 - **Server components by default** — only add `'use client'` when needed
 - **React Query for data fetching** — `useQuery` + `shallow: true` for tables, `useMutation` (spreading shared `mutationOptions`) for forms
 - **`api` for HTTP** — never `fetch` directly in features
-- **Env** — declare in `src/env.ts` (zod) + `env.example.txt`; server code reads `env` from `@/env`, browser code reads `PUBLIC_ENV` from `@/lib/public-env`; never `process.env` elsewhere
+- **Env** — declare in `src/env.ts` (zod) + `.env.example`; server code reads `env` from `@/env`, browser code reads `PUBLIC_ENV` from `@/lib/public-env`; never `process.env` elsewhere
 - **New third-party origin** (API, images, scripts) — add it in `src/config/security-headers.ts` / `src/config/images.ts`, or the CSP will block it
-- **nuqs for URL state** — `searchParamsCache` on server, `useQueryState` on client
+- **nuqs for URL state** — a per-feature `createSearchParamsCache` on server, `useQueryStates` with the same parsers on client
 - **Formatting**: single quotes, JSX single quotes, no trailing comma, 2-space tabs

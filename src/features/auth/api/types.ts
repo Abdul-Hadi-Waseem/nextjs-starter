@@ -1,11 +1,11 @@
-import type { Role } from '../constants';
+import type { Permission, Role } from '../constants/auth';
 
 export type AuthUser = {
   id: number;
   name: string;
   email: string;
   role: Role;
-  permissions: string[];
+  permissions: Permission[];
 };
 
 export type LoginPayload = {

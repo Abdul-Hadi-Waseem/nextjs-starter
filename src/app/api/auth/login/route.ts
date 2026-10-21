@@ -1,27 +1,18 @@
-import { NextResponse, type NextRequest } from 'next/server';
-import { HTTP_STATUS } from '@/lib/api/config';
+import type { NextRequest } from 'next/server';
 import { mockUser, setSessionCookie } from '@/app/api/_mock/auth';
 import { mockApiDisabled } from '@/app/api/_mock/guard';
+import { parseBody } from '@/app/api/_mock/validation';
+import { loginSchema } from '@/features/auth/schemas/login';
+import { privateJson } from '@/app/api/_mock/cache-control';
 
 // Mock login: accepts any email + password. A real backend verifies the
 // credentials and sets its own httpOnly cookie.
 export async function POST(request: NextRequest) {
   const disabled = mockApiDisabled();
   if (disabled) return disabled;
-  const body = (await request.json().catch(() => null)) as {
-    email?: string;
-    password?: string;
-  } | null;
 
-  if (!body?.email || !body?.password) {
-    return NextResponse.json(
-      { success: false, message: 'Email and password are required' },
-      { status: HTTP_STATUS.BAD_REQUEST }
-    );
-  }
+  const { data: body, error } = await parseBody(request, loginSchema);
+  if (error) return error;
 
-  return setSessionCookie(
-    NextResponse.json({ success: true, user: mockUser(body.email) }),
-    body.email
-  );
+  return setSessionCookie(privateJson({ success: true, user: mockUser(body.email) }), body.email);
 }

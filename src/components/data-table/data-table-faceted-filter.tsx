@@ -4,8 +4,8 @@ import type * as React from 'react';
 
 import { type Column, type RowData, Subscribe } from '@tanstack/react-table';
 
-import type { DataTableFeatures } from '@/lib/data-table-features';
-import type { FilterOption } from '@/lib/data-table-types';
+import type { DataTableFeatures } from '@/lib/data-table/features';
+import type { FilterOption } from '@/lib/data-table/types';
 
 import { Button } from '@/components/ui/button';
 import { useDirection } from '@/components/ui/direction';

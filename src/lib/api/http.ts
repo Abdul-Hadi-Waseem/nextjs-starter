@@ -27,9 +27,11 @@ export type RequestOptions = {
 
 const isServer = typeof window === 'undefined';
 
+const API_BASE = API_URL.endsWith('/') ? API_URL : `${API_URL}/`;
+
+// `path` is relative to API_URL; an absolute URL (a public third-party API) is used as-is.
 function buildUrl(path: string, query?: RequestOptions['query']) {
-  const base = API_URL.endsWith('/') ? API_URL : `${API_URL}/`;
-  const url = new URL(path.replace(/^\//, ''), base);
+  const url = new URL(path.replace(/^\//, ''), API_BASE);
 
   for (const [key, value] of Object.entries(query ?? {})) {
     if (value !== undefined && value !== null && value !== '') {
@@ -78,12 +80,15 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   requestHeaders.set('Accept', 'application/json');
   if (body !== undefined) requestHeaders.set('Content-Type', 'application/json');
 
-  if (auth && isServer) {
+  const url = buildUrl(path, query);
+
+  // Forward the browser's cookies to our own backend only, never to another host.
+  if (auth && isServer && url.origin === new URL(API_BASE).origin) {
     const cookie = await getServerCookieHeader();
     if (cookie) requestHeaders.set('Cookie', cookie);
   }
 
-  const res = await fetch(buildUrl(path, query), {
+  const res = await fetch(url, {
     ...init,
     method,
     headers: requestHeaders,

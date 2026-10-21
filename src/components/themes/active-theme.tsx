@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
+import { ReactNode, createContext, use, useEffect, useState } from 'react';
 
 import { DEFAULT_THEME } from './theme.config';
 
@@ -63,7 +63,7 @@ export function ActiveThemeProvider({
 }
 
 export function useThemeConfig() {
-  const context = useContext(ThemeContext);
+  const context = use(ThemeContext);
   if (context === undefined) {
     throw new Error('useThemeConfig must be used within an ActiveThemeProvider');
   }

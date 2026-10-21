@@ -5,7 +5,8 @@ import {
   defaultShouldDehydrateQuery,
   isServer
 } from '@tanstack/react-query';
-import { AUTH, isApiError } from '@/lib/api';
+import { cache } from 'react';
+import { AUTH, isApiError, signInUrl } from '@/lib/api';
 
 const MAX_RETRIES = 2;
 
@@ -15,8 +16,7 @@ function handleUnauthorized(error: unknown, queryClient: QueryClient) {
   if (window.location.pathname.startsWith(AUTH.signInPath)) return;
 
   queryClient.clear();
-  const next = encodeURIComponent(window.location.pathname + window.location.search);
-  window.location.assign(`${AUTH.signInPath}?next=${next}`);
+  window.location.assign(signInUrl(window.location.pathname + window.location.search));
 }
 
 function makeQueryClient() {
@@ -44,13 +44,14 @@ function makeQueryClient() {
   return queryClient;
 }
 
+// Server: one client per request (React `cache`), so the layouts and the page of a
+// request share it and the same query is fetched once.
+// Requests never share a client. Browser: one client for the whole session.
+const getRequestQueryClient = cache(makeQueryClient);
 let browserQueryClient: QueryClient | undefined = undefined;
 
 export function getQueryClient() {
-  if (isServer) {
-    return makeQueryClient();
-  } else {
-    if (!browserQueryClient) browserQueryClient = makeQueryClient();
-    return browserQueryClient;
-  }
+  if (isServer) return getRequestQueryClient();
+  if (!browserQueryClient) browserQueryClient = makeQueryClient();
+  return browserQueryClient;
 }

@@ -5,7 +5,7 @@ import type { DateRange } from 'react-day-picker';
 import { type Column, type RowData, Subscribe } from '@tanstack/react-table';
 import * as React from 'react';
 
-import type { DataTableFeatures } from '@/lib/data-table-features';
+import type { DataTableFeatures } from '@/lib/data-table/features';
 
 import { formatDate } from '@/lib/format';
 import { Button } from '@/components/ui/button';

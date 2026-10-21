@@ -10,21 +10,27 @@
 //   const res = await fetch(`${BACKEND_URL}/users?${searchParams}`, {
 //     headers: { Authorization: `Bearer ${token}` }
 //   })
-//   return NextResponse.json(await res.json())
+//   return privateJson(await res.json())
 //
 // Current: Mock (in-memory fake data for demo/prototyping)
 // ============================================================
 
-import { fakeUsers } from '@/constants/mock-api-users';
-import { NextRequest, NextResponse } from 'next/server';
-import { requireSession } from '@/app/api/_mock/auth';
+import { fakeUsers } from '@/app/api/_mock/db/users';
+import type { NextRequest } from 'next/server';
+import { ADMIN_ONLY_MESSAGE, requireAdmin, requireSession } from '@/app/api/_mock/auth';
+import { parseBody } from '@/app/api/_mock/validation';
+import { userSchema } from '@/features/examples/tables/users/schemas/user';
 import { mockApiDisabled } from '@/app/api/_mock/guard';
+import { privateJson } from '@/app/api/_mock/cache-control';
+import { HTTP_STATUS } from '@/lib/api/config';
 
 export async function GET(request: NextRequest) {
   const disabled = mockApiDisabled();
   if (disabled) return disabled;
   const unauthorized = requireSession(request);
   if (unauthorized) return unauthorized;
+  const forbidden = requireAdmin(request, ADMIN_ONLY_MESSAGE.USERS);
+  if (forbidden) return forbidden;
 
   const { searchParams } = request.nextUrl;
 
@@ -42,7 +48,7 @@ export async function GET(request: NextRequest) {
     sort
   });
 
-  return NextResponse.json(data);
+  return privateJson(data);
 }
 
 export async function POST(request: NextRequest) {
@@ -50,8 +56,12 @@ export async function POST(request: NextRequest) {
   if (disabled) return disabled;
   const unauthorized = requireSession(request);
   if (unauthorized) return unauthorized;
+  const forbidden = requireAdmin(request, ADMIN_ONLY_MESSAGE.USERS);
+  if (forbidden) return forbidden;
 
-  const body = await request.json();
+  const { data: body, error } = await parseBody(request, userSchema);
+  if (error) return error;
+
   const data = await fakeUsers.createUser(body);
-  return NextResponse.json(data, { status: 201 });
+  return privateJson(data, { status: HTTP_STATUS.CREATED });
 }

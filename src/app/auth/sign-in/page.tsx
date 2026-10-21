@@ -4,6 +4,7 @@ import { Icons } from '@/components/icons';
 import { SITE } from '@/config/site';
 import { MOCK_API_ENABLED } from '@/app/api/_mock/guard';
 import { SignInForm } from '@/features/auth/components/sign-in-form';
+import { Spotlight } from '@/features/auth/components/spotlight';
 
 export const metadata: Metadata = {
   title: 'Sign in'
@@ -25,6 +26,7 @@ export default function SignInPage() {
     <main className='grid min-h-svh lg:grid-cols-2'>
       {/* Decorative panel: drawn with CSS (no image), follows the active theme. */}
       <section className='bg-muted relative hidden overflow-hidden lg:block' aria-hidden='true'>
+        <Spotlight />
         <div className='auth-backdrop absolute inset-0' />
         <div className='relative flex h-full flex-col justify-between p-10'>
           <BrandMark />

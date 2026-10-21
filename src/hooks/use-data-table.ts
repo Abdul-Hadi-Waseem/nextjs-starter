@@ -22,18 +22,18 @@ import type {
   DataTableQueryKeys,
   FilterVariant,
   JoinOperator
-} from '@/lib/data-table-types';
+} from '@/lib/data-table/types';
 
 import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
-import { type DataTableFeatures, dataTableFeatures } from '@/lib/data-table-features';
+import { type DataTableFeatures, dataTableFeatures } from '@/lib/data-table/features';
 import {
   getColumnFilterParser,
   getColumnFilters,
   getColumnFiltersKey,
   getSortingStateParser,
   sortColumnFiltersBySearch
-} from '@/lib/data-table-parsers';
-import { getActiveFilters, JOIN_OPERATORS, normalizeColumnFilter } from '@/lib/data-table-utils';
+} from '@/lib/data-table/parsers';
+import { getActiveFilters, JOIN_OPERATORS, normalizeColumnFilter } from '@/lib/data-table/utils';
 
 const PAGE_KEY = 'page';
 const PER_PAGE_KEY = 'perPage';

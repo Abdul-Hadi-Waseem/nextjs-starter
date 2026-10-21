@@ -2,99 +2,96 @@
 
 Where things go in this repo, and why. Read this before adding a feature.
 
-## Feature layout
+## Folder structure
 
-Every feature lives in `src/features/<feature>/`:
+This section is the one full guide to where files go. CLAUDE.md, AGENTS.md and the `nextjs-starter` skill only link here.
 
 ```plaintext
-src/features/products/
-├── api/
-│   ├── types.ts       # Request/response types
-│   ├── service.ts     # The ONLY place that talks to the backend
-│   ├── queries.ts     # Query key factory + queryOptions (reads)
-│   └── mutations.ts   # mutationOptions (writes) + cache invalidation
-├── components/        # Feature UI (listing, form, table, view page)
-├── schemas/           # Zod schemas for forms
-└── constants/         # Feature-only constants and enums
+src/
+├── app/                      # Routes only: thin page.tsx / loading.tsx / error.tsx / layout.tsx
+│   ├── dashboard/<name>/     # One folder per page (examples/ holds the reference pages)
+│   └── api/                  # Route handlers (the mock backend until a real one exists)
+│       ├── <name>/route.ts   # One handler per resource
+│       └── _mock/            # Everything mock: guard, auth, validation, cache-control helpers
+│           └── db/           # Fake data stores (partners.ts, payouts.ts, …, utils.ts)
+├── features/<name>/          # Everything one feature owns (folders only, see below)
+├── components/               # UI used by 2+ features: ui/ (shadcn), layout/, data-table/, forms/, icons.tsx, …
+├── hooks/                    # Hooks used by 2+ features
+├── lib/                      # Helpers used by 2+ features; related files grouped (lib/api/, lib/data-table/)
+├── stores/                   # Zustand stores used by 2+ features
+├── config/                   # Nav, site name, security headers, image hosts
+├── styles/                   # theme.css (tokens), themes/<name>.css, globals.css
+└── types/                    # Types shared by 2+ features (NavItem, PermissionCheck)
 ```
 
-Routes in `src/app/` stay thin: a `page.tsx` reads params and renders a feature component.
+### A feature folder
 
-## Data fetching
+`src/features/<name>/` holds **only folders**, never loose files. Use the ones you need from this list:
 
-### Reads (queries)
-
-1. Write the fetch function in `api/service.ts`.
-2. Add a key and `queryOptions` in `api/queries.ts`:
-
-```ts
-export const productKeys = {
-  all: ['products'] as const,
-  list: (filters: ProductFilters) => [...productKeys.all, 'list', filters] as const,
-  detail: (id: number) => [...productKeys.all, 'detail', id] as const
-};
-
-export const productsQueryOptions = (filters: ProductFilters) =>
-  queryOptions({ queryKey: productKeys.list(filters), queryFn: () => getProducts(filters) });
+```plaintext
+src/features/payouts/
+├── api/          # types.ts, service.ts (the ONLY file that talks to the backend), queries.ts, mutations.ts
+├── actions/      # Server actions ('use server')
+├── components/   # Feature UI: listing, table, form, page shell, skeletons
+├── constants/    # as const objects, options, routes, info-content.ts
+├── hooks/        # Hooks only this feature uses
+├── lib/          # Helpers: URL parsers, form helpers, mappers
+├── schemas/      # Zod schemas
+└── stores/       # Zustand stores only this feature uses
 ```
 
-3. Prefetch on the server, hydrate on the client (see `features/products/components/product-listing.tsx`):
+Routes in `src/app/` stay thin: a `page.tsx` reads params and renders a feature component. Copy `features/partners` (table + detail page) or `features/payouts` (table + sheet form) when you start a feature.
 
-```tsx
-const queryClient = getQueryClient();
-void queryClient.prefetchQuery(productsQueryOptions(filters));
+### The `shared/` rule: the nearest common parent
 
-return (
-  <HydrationBoundary state={dehydrate(queryClient)}>
-    <ProductTable />
-  </HydrationBoundary>
-);
-```
+Code lives in the closest folder that contains every place that uses it.
 
-4. In the client component, read it with `useSuspenseQuery(productsQueryOptions(filters))` or `useQuery(...)`.
+- Used by one feature (or one sub-module): inside it.
+- Used by 2+ sub-modules of one area: that area's `shared/` folder, with the same sub-folders as a feature (`src/features/examples/shared/{api,components,constants,lib}`).
+- Used by 2+ features: the app-level folders `src/components`, `src/hooks`, `src/lib`, `src/stores`, `src/types`. There is no `src/shared`; those folders are the app's shared level.
+- Start at the lowest level and move code up only when a second user appears.
+- Exception: a domain component tied to one feature's constants stays in that feature, and others import it (overview and partners import `PayoutStatusBadge` from `features/payouts`).
 
-Components import from `queries.ts` and `service.ts`, never from mock data or `fetch` directly.
+### Naming
 
-### Writes (mutations)
+- Files are kebab-case. Hooks are `use-<name>.ts`, and `.tsx` only when they render JSX.
+- Related helpers in `src/lib` share a sub-folder (`src/lib/data-table/{features,filters,parsers,types,utils}.ts`), not a filename prefix.
 
-Put them in `api/mutations.ts` and invalidate the feature's keys on success:
+### Mocks
 
-```ts
-export const createProductMutation = mutationOptions({
-  mutationFn: (data: ProductMutationPayload) => createProduct(data),
-  onSuccess: () => getQueryClient().invalidateQueries({ queryKey: productKeys.all })
-});
-```
+All mock code is under `src/app/api/_mock/`, and the fake data stores are in `src/app/api/_mock/db/`. Route handlers import them; features and components never do (they go through `api/service.ts`). The feature owns each data shape in its `api/types.ts`, and the store imports it from there. To switch to a real backend, delete `src/app/api/_mock` and the mock route handlers, drop the `MOCK_API_ENABLED` demo hint in `src/app/auth/sign-in/page.tsx`, then set `NEXT_PUBLIC_API_URL`.
 
-Use them in components with `useMutation(createProductMutation)`.
+### Examples
 
-### Calling the backend: `api` (`src/lib/api`)
+The reference pages under `src/app/dashboard/examples` (sidebar → Examples) show patterns the app doesn't use yet. Their code is one area, `src/features/examples/`, with one sub-module per topic (`access/`, `client-state/`, `data-fetching/`, `data-fetching/react-query/`, `server-side/`, `tables/products/`, `tables/users/`, `forms/`, `icons/`). Code that several topics use is in `src/features/examples/shared/`. The whole area is safe to delete (see README).
 
-Every service uses `api`. Never call `fetch` directly. It builds the URL from `NEXT_PUBLIC_API_URL`, sends and parses JSON, and throws `ApiError` (with `status` and `body`) on a non-2xx response.
+### I'm adding X → put it in Y
 
-```ts
-import { api } from '@/lib/api';
+| I'm adding | Put it in |
+| --- | --- |
+| Page | `src/app/dashboard/<name>/page.tsx` + `loading.tsx`, both rendering the feature's `<Name>PageShell` |
+| Route handler | `src/app/api/<name>/route.ts` (mock: `mockApiDisabled()` + `requireSession(request)` first) |
+| Server action | `src/features/<name>/actions/<verb-noun>.ts` |
+| Query / mutation | `src/features/<name>/api/queries.ts` / `api/mutations.ts`; the call itself in `api/service.ts` |
+| Component used by 1 feature | `src/features/<name>/components/` |
+| Component used by 2+ sub-modules of one area | `<area>/shared/components/` (e.g. `src/features/examples/shared/components/`) |
+| Component used by 2+ features | `src/components/` (shadcn primitives in `src/components/ui/`) |
+| Hook | `src/features/<name>/hooks/use-<name>.ts`; used by 2+ features: `src/hooks/` |
+| Store (Zustand) | `src/features/<name>/stores/`; used by 2+ features: `src/stores/` |
+| Schema (zod) | `src/features/<name>/schemas/` |
+| Constant | `src/features/<name>/constants/<topic>.ts` as an `as const` object; others import it from the owning feature; app-wide settings in `src/config/` |
+| Helper | `src/features/<name>/lib/`; used by 2+ features: `src/lib/` (grouped in a sub-folder when related) |
+| Shared type | `src/features/<name>/api/types.ts`; used by 2+ features: `src/types/` |
+| Mock data | `src/app/api/_mock/db/<name>.ts` |
+| Image | `public/images/` (WebP/AVIF/SVG under 300 KB, rendered with `next/image`) |
+| Style token (color) | `src/styles/theme.css` (`:root`, `.dark`, `@theme inline`); per-theme overrides in `src/styles/themes/<name>.css` |
 
-// Authenticated (the default): sends the auth cookie
-api.get<ProductsResponse>('/products', { query: filters });
-api.post<ProductMutationResponse>('/products', { body: payload });
-api.put(`/products/${id}`, { body: payload });
-api.delete(`/products/${id}`);
+## Data fetching and caching
 
-// Public endpoint: no cookie sent
-api.get<Plan[]>('/plans', { auth: false });
-```
+Queries, mutations, the `api` client, caching rules (server cache for public data only, TanStack Query for per-user data, `Cache-Control` headers), optimistic updates, pagination and server-side calls: **[docs/data-fetching.md](./data-fetching.md)**.
 
-The same call works from a server component (prefetch) and from the browser (queries, mutations):
+## Authentication
 
-| Where it runs | `auth: true` (default) | `auth: false` |
-| :--- | :--- | :--- |
-| Browser | `credentials: 'include'`: the browser attaches the cookie | `credentials: 'omit'` |
-| Server (prefetch, route handlers, server actions) | Forwards the incoming request's cookies from `cookies()` | Nothing forwarded |
-
-For static public data that rarely changes, you can also fetch it in a server component and let Next.js cache it (`api.get(path, { auth: false, next: { revalidate: 3600 } })`).
-
-### Authentication
 
 The backend issues the auth token as an **httpOnly cookie**. The frontend never reads or stores the token.
 
@@ -104,7 +101,7 @@ The backend issues the auth token as an **httpOnly cookie**. The frontend never 
 - **On by default.** Without the session cookie, `/dashboard/*` redirects to sign-in. `NEXT_PUBLIC_AUTH_ENABLED=false` opens everything (demo only). Set `AUTH_COOKIE_NAME` to the cookie your backend sets.
 - **Sign-in page** (`src/app/auth/sign-in`): with the mock API on, it shows a demo hint and a "Fill demo admin" button. Swapping to your backend needs no UI change: `login` in `src/features/auth/api/service.ts` posts to `/auth/login` on `NEXT_PUBLIC_API_URL`, and the backend sets the cookie.
 
-**Mock backend.** Out of the box, `NEXT_PUBLIC_API_URL` points at this app's own route handlers in `src/app/api/` (products, users, `auth/login|logout|me`). With auth enabled they return 401 without the cookie, just like a real backend. Point `NEXT_PUBLIC_API_URL` at your backend and delete `src/app/api/` when you connect a real one.
+**Mock backend.** Out of the box, `NEXT_PUBLIC_API_URL` points at this app's own route handlers in `src/app/api/` (`overview`, `partners`, `payouts`, `team`, `auth/login|logout|me`). With auth enabled they return 401 without the cookie, just like a real backend. Point `NEXT_PUBLIC_API_URL` at your backend and delete `src/app/api/` when you connect a real one.
 
 Two production safeguards:
 
@@ -120,10 +117,10 @@ Two production safeguards:
 
 ## Environment variables
 
-- **Every variable is declared in `src/env.ts`** with a zod schema (`@t3-oss/env-nextjs`). `bun run dev` and `bun run build` stop with "Invalid environment variables" when one is missing or wrong. Start with `cp env.example.txt .env.local`.
+- **Every variable is declared in `src/env.ts`** with a zod schema (`@t3-oss/env-nextjs`). `bun run dev` and `bun run build` stop with "Invalid environment variables" when one is missing or wrong. Start with `cp .env.example .env.local`.
 - Server code reads `env` from `@/env`. Browser code reads `PUBLIC_ENV` from `@/lib/public-env`: the same values (inlined at build, already validated), without shipping zod to every page. Never read `process.env` elsewhere.
 - Only `NEXT_PUBLIC_` variables (the `client` block) reach the browser, and anyone can read them. Secrets go in the `server` block; reading one in client code throws.
-- Adding a variable: add it to `src/env.ts` (schema + `runtimeEnv`) and to `env.example.txt`; if browser code needs it, also to `src/lib/public-env.ts`.
+- Adding a variable: add its schema to `src/env.ts` (`NEXT_PUBLIC_*` also need a line in `experimental__runtimeEnv`; server vars don't) and add it to `.env.example`; if browser code needs it, also to `src/lib/public-env.ts`.
 
 ## UI components (shadcn/ui)
 
@@ -152,11 +149,23 @@ bunx shadcn@latest add <component> --diff   # compare your edited copy with the 
 
 Anatomy of a shadcn file (see `src/components/ui/badge.tsx`): Base UI provides behavior and accessibility; `cva()` holds every class and variant; the component merges `variant` classes with your `className`; `render` swaps the element (e.g. `render={<Link href='/x' />}`); `data-slot` lets parents style it.
 
-## Where components go
+## Adding a feature (with new colors, shadcn and hand-made components)
 
-- **`src/features/<name>/components/`**: anything that belongs to one feature: its listing, form, table columns, page shell, skeletons.
-- **`src/components/`**: anything used by two or more features or by none: `ui/` (shadcn primitives), `layout/`, `data-table/`, `forms/fields/`, `icons.tsx`, small shared pieces like `truncated-text.tsx`.
-- Start inside the feature. Move a component to `src/components/` only when a second feature needs it.
+1. **New colors → a semantic token, once.** Add it to `src/styles/theme.css` (shared by all themes), never as hex in a component:
+   ```css
+   :root { --success: oklch(0.62 0.16 150); --success-foreground: oklch(0.98 0 0); }
+   .dark { --success: oklch(0.72 0.16 150); --success-foreground: oklch(0.2 0 0); }
+   @theme inline {
+     --color-success: var(--success);
+     --color-success-foreground: var(--success-foreground);
+   }
+   ```
+   Then `bg-success`, `text-success`, `bg-success/10` work everywhere. A theme that needs its own value overrides `--success` in `src/styles/themes/<name>.css`.
+2. **shadcn component** → `bunx shadcn@latest add <name>` (lands in `src/components/ui/`), `bun run format`, and give it a variant that uses the token (e.g. `success: 'bg-success/10 text-success'` in its `cva()`).
+3. **Hand-made components** → placed by the [`shared/` rule](#the-shared-rule-the-nearest-common-parent): the feature first, `src/components/` once a second feature uses them. Build them from `ui/` primitives and tokens.
+4. **Data** → `api/types.ts`, `api/service.ts` (`api` from `@/lib/api`), `api/queries.ts`, `api/mutations.ts`; mock endpoint `src/app/api/<name>/route.ts` (call `mockApiDisabled()` and `requireSession()` first) until the real one exists.
+5. **Page** → `src/app/dashboard/<name>/page.tsx` and `loading.tsx`, both wrapped in the feature's `<Name>PageShell` (same header, no layout shift); nav entry in `src/config/nav-config.ts` with `access` if restricted (+ `requireAccess` on the page).
+6. **Check** → `bun run dev` (light + dark, switch themes), `bun run dev:scan` (no stray re-renders), then push: the pre-push hook runs every gate.
 
 ## Client state (Zustand)
 
@@ -164,6 +173,7 @@ Most state already has a home: server data in TanStack Query, URL state (filters
 
 - Store used by one feature: `src/features/<name>/stores/`. Shared store: `src/stores/`.
 - Example: `src/stores/ui-preferences.ts` (table density, toggled from the table toolbar, remembered per browser). It persists to localStorage with `skipHydration`, and `PreferencesHydrator` loads it after mount, so server and client render the same HTML first.
+- Reference page: `/dashboard/examples/client-state` (one-field selectors, `persist` + `skipHydration`, a per-store hydrator).
 - A preference that must be right in the server HTML (e.g. the sidebar) belongs in a cookie instead.
 
 ## Images
@@ -205,12 +215,13 @@ Rules that keep pages light:
 
 ## Access control (roles)
 
-- Roles live in `ROLE` (`src/features/auth/constants.ts`); the signed-in user (`/auth/me`) has a `role` and `permissions`.
-- **Nav items**: `access: { role: ROLE.ADMIN }` or `{ permission: 'users:write' }` in `src/config/nav-config.ts`. Items the user can't access are hidden from the sidebar and Cmd+K.
+- Roles live in `ROLE` (`src/features/auth/constants/auth.ts`); the signed-in user (`/auth/me`) has a `role` and `permissions`.
+- **Nav items**: `access: { role: ROLE.ADMIN }` or `{ permission: 'team:write' }` in `src/config/nav-config.ts`. Items the user can't access are hidden from the sidebar and Cmd+K.
 - **Pages**: `await requireAccess({ role: ROLE.ADMIN })` at the top of the server page. Signed-out users go to sign-in; users without access get a 404.
 - Hiding links is UX only. **The backend must enforce the same rule** on its endpoints.
 - With `NEXT_PUBLIC_AUTH_ENABLED=false` (demo), everything is visible.
 - Mock backend: emails starting with `admin` sign in as admin, any other email as member.
+- Reference page: `/dashboard/examples/access` (`hasAccess` in a client component, `requireAccess` on `/dashboard/examples/access/admin`).
 
 ## Name and branding
 
@@ -222,9 +233,11 @@ The app name and description live in `src/config/site.ts` (`SITE`). Titles, meta
 
 ## Loading states without layout shift
 
-- A page's `loading.tsx` renders the same page shell as the page (see `ProductsPageShell` in `src/features/products/components/products-page-shell.tsx`), so the title and actions don't move when data arrives.
+- A page's `loading.tsx` renders the same page shell as the page (see `PartnersPageShell` in `src/features/partners/components/partners-page-shell.tsx`), so the title and actions don't move when data arrives.
 - Skeletons use the real sizes of what they stand in for (fixed chart height in `src/features/overview/constants/chart.ts`, real chart headers, `h-lh` text placeholders).
 - Check with Chrome DevTools > Performance (Layout Shift) or Lighthouse; aim for CLS 0.
+- `<Skeleton>` stays invisible for its first 150ms, then fades in (`animate-skeleton` in `src/styles/globals.css`), so fast loads show nothing instead of a flash. Build placeholders from `<Skeleton>`, not raw `bg-muted` divs. Busy dimming works the same way: add the delay only in the busy state (`isStale && 'opacity-60 delay-150'`), so a fast answer never blinks.
+- Use parallel routes only when sections have independent data sources; sections that read one query belong in one page with one `loading.tsx` (see `src/app/dashboard/overview`).
 
 ## Security headers
 

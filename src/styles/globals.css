@@ -81,6 +81,49 @@
   animation: reveal 0.4s ease-in-out forwards;
 }
 
+/* Skeletons stay invisible for their first 150ms, then fade in and pulse. A load
+   that finishes sooner shows nothing instead of a flash. Only opacity animates, so
+   the skeleton keeps its space the whole time (no layout shift). Reduced motion: the
+   same delay, then a plain show with no fade or pulse. Used by <Skeleton>. */
+@keyframes skeleton-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* The same delayed fade for busy indicators (LoadingButton's spinner): a request
+   that settles within 150ms never shows one. */
+@utility animate-show-delayed {
+  animation: skeleton-in 150ms ease-out 150ms both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: skeleton-in 0s 150ms both;
+  }
+}
+
+@utility animate-skeleton {
+  animation:
+    skeleton-in 150ms ease-out 150ms both,
+    skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 300ms infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: skeleton-in 0s 150ms both;
+  }
+}
+
 /* Base UI sets --accordion-panel-height on Accordion.Panel, but tw-animate-css's
    accordion keyframes only read the radix-era variable. Redefine them (later in
    the cascade, so these win) with a Base UI fallback so expand/collapse animates

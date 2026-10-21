@@ -4,6 +4,25 @@ This file provides essential information for AI coding agents working on this pr
 
 ---
 
+## Before you finish (mandatory review)
+
+After any change under `src/`, `next.config.ts`, `package.json` or `src/config`, review your own diff before saying the work is done. Claude Code runs the `frontend-reviewer` agent (`/review`); other agents (Codex, Cursor, …) follow the same checklist themselves. The full checklist and output format are in [`.claude/agents/frontend-reviewer.md`](./.claude/agents/frontend-reviewer.md); this is the short version.
+
+1. **Scope**: `git diff`, `git diff --staged` and untracked files (`git status --porcelain`).
+2. **Data layer**: no `fetch` or mock imports in components; `service.ts` calls `api` from `@/lib/api`; reads in `queries.ts` with a key factory, writes in `mutations.ts` invalidating the feature's keys; no per-component 401 handling.
+3. **Security**: no `@/env` in client code (use `PUBLIC_ENV` from `@/lib/public-env`); no `process.env` elsewhere; no secrets in `NEXT_PUBLIC_*`; new third-party origins added in `src/config/security-headers.ts` / `src/config/images.ts`; mock routes start with `mockApiDisabled()` + `requireSession(request)`; redirect targets validated; route handler bodies parsed with zod; restricted pages call `requireAccess`.
+4. **Bundle**: justify every new dependency (size, client-reachable?); heavy client libraries (recharts, motion, kbar, date pickers) via `next/dynamic`; no barrel imports of whole libraries; `bun run bundle:check` passes when a build exists.
+5. **Performance**: `'use client'` only where needed; no inline objects in hot lists, whole-store Zustand selectors or effects that copy derived state; `loading.tsx` uses the page shell and real skeleton sizes; non-default fonts `preload: false`; animations on `transform`/`opacity` only and reduced-motion aware.
+6. **Images and accessibility**: `next/image` with `sizes`, WebP/AVIF/SVG under 300 KB in `public/`; labels, `alt`, keyboard and focus, correct button vs link.
+7. **Conventions**: icons from `@/components/icons`, `cn()`, `PageContainer` props, tokens not color literals, `as const` constants, named exports.
+8. **Where files go**: feature folders hold only folders (`api/`, `actions/`, `components/`, `constants/`, `hooks/`, `lib/`, `schemas/`, `stores/`); code lives in the nearest common parent (one feature → inside it; 2+ sub-modules of one area → that area's `shared/`; 2+ features → `src/components`, `src/hooks`, `src/lib`, `src/stores`); mocks only in `src/app/api/_mock/` (stores in `db/`); hooks are `.ts` unless they render JSX. Full guide and the "I'm adding X → put it in Y" table: [docs/frontend.md "Folder structure"](./docs/frontend.md#folder-structure).
+9. **Design**: SRP (one reason to change per file/component/hook; UI, data and logic split), DRY (reuse the shared helper/component, grep before writing one; a second copy moves per **Where files go**), KISS (simplest thing that meets the requirement; no speculative abstractions, wrappers or unused options).
+10. **Gates**: `bun run typecheck`, `bun run lint`, `bun run format:check`, `bun run images:check`.
+
+Sort what you find into Must fix / Should fix / Nit. Fix every Must-fix item and re-run the gates before you finish; mention any Should-fix you left.
+
+---
+
 ## Project Overview
 
 **Next.js Admin Dashboard Starter** is a production-ready admin dashboard template built with:
@@ -46,7 +65,7 @@ The project follows a feature-based folder structure designed for scalability in
 - Server-side prefetching with `HydrationBoundary` + `dehydrate`
 - Client-side `useQuery` + nuqs `shallow: true` for tables (no RSC round-trips on pagination/filter)
 - `useMutation` + `invalidateQueries` for form submissions
-- Query client singleton in `src/lib/query-client.ts`
+- Query client in `src/lib/query-client.ts`: one per request on the server (React `cache`), one per session in the browser
 
 ### Data & APIs
 
@@ -55,8 +74,8 @@ The project follows a feature-based folder structure designed for scalability in
 - Recharts for analytics/charts
 - Service layer per feature (`api/types.ts` → `api/service.ts` → `api/queries.ts`)
 - Route handlers at `src/app/api/` (for Route Handler or BFF patterns)
-- Mock data in `src/constants/mock-api*.ts` (default, swap via service layer)
-- HTTP client `api` in `src/lib/api` (auth cookie sent by default, `{ auth: false }` for public endpoints; see docs/frontend.md)
+- Mock data stores in `src/app/api/_mock/db/*.ts`, used only by the route handlers (swap via the service layer)
+- HTTP client `api` in `src/lib/api` (auth cookie sent by default, `{ auth: false }` for public endpoints; see docs/data-fetching.md)
 
 ### Development Tools
 
@@ -73,54 +92,68 @@ The project follows a feature-based folder structure designed for scalability in
 /src
 ├── app/                    # Next.js App Router
 │   ├── dashboard/         # Dashboard routes
-│   │   ├── overview/      # Parallel routes (@area_stats, @bar_stats, etc.)
-│   │   ├── product/       # Product management pages
-│   ├── api/               # API routes (if any)
+│   │   ├── overview/      # One page + loading.tsx + error.tsx; all sections read one query
+│   │   ├── partners/      # Partners table + [id] detail page
+│   │   ├── payouts/       # Payouts table + new/edit payout sheet (?new=1)
+│   │   ├── settings/      # Profile, preferences, team/ (admin only)
+│   │   └── examples/      # Reference pages: tables/*, forms/*, data-fetching/*, server/*, access, client-state, icons
+│   ├── api/               # Mock backend: overview, partners, payouts, team, auth (+ products, users, examples/* for examples)
+│   │   └── _mock/         # Mock-only helpers (guard, auth, validation); db/ holds the fake data stores
+│   ├── auth/sign-in/      # Sign-in page
 │   ├── layout.tsx         # Root layout with providers
-│   ├── page.tsx           # Landing page
+│   ├── page.tsx           # Redirects to /dashboard/overview
 │   ├── global-error.tsx   # Global error boundary
 │   └── not-found.tsx      # 404 page
 │
-├── components/
+├── components/            # UI used by 2+ features
 │   ├── ui/                # shadcn/ui components (50+ components)
 │   ├── layout/            # Layout components (sidebar, header, etc.)
-│   ├── forms/             # Field components (shadcn TanStack Form anatomy) + demos
+│   ├── forms/             # Field components (shadcn TanStack Form anatomy)
 │   ├── themes/            # Theme system components
 │   ├── kbar/              # Command+K search bar
 │   ├── icons.tsx          # Icon registry
 │   └── ...
 │
 ├── features/              # Feature-based modules
-│   ├── overview/          # Dashboard analytics
-│   ├── products/          # Product management (React Query + nuqs)
+│   ├── auth/              # Sign-in, session, roles, requireAccess
+│   ├── overview/          # KPIs, trend chart, status breakdown, recent payouts
+│   ├── partners/          # Partners table + detail (React Query + nuqs)
+│   ├── payouts/           # Payouts table + sheet form (React Query + nuqs + TanStack Form)
 │   │   ├── api/
-│   │   │   ├── types.ts   # Type contract (response shapes, filters, payloads)
-│   │   │   ├── service.ts # Data access layer (swap for your backend)
-│   │   │   └── queries.ts # React Query options + key factories
-│   │   ├── components/    # Listing, form, table components
+│   │   │   ├── types.ts     # Type contract (response shapes, filters, payloads)
+│   │   │   ├── service.ts   # Data access layer (swap for your backend)
+│   │   │   ├── queries.ts   # React Query options + key factories
+│   │   │   └── mutations.ts # mutationOptions + cache invalidation
+│   │   ├── components/    # Listing, table, sheet form, page shell
 │   │   ├── schemas/       # Zod schemas
-│   │   └── constants/     # Filter options
-│   ├── users/             # User management (React Query + nuqs)
-│   │   ├── api/           # Same pattern: types.ts → service.ts → queries.ts
-│   │   └── components/    # Listing, table components
-│   ├── react-query-demo/  # React Query showcase (Pokemon API)
+│   │   ├── lib/           # URL parsers, form helpers
+│   │   └── constants/     # Options, table keys, routes
+│   ├── settings/          # Profile, preferences, team members
+│   └── examples/          # Reference pages' code, one sub-module per topic:
+│       ├── access/, client-state/, data-fetching/ (+ react-query/), server-side/
+│       ├── tables/products/, tables/users/, forms/, icons/
+│       └── shared/        # Code used by 2+ example topics (api/, components/, constants/, lib/)
 │
 ├── config/                # Configuration files
 │   ├── nav-config.ts      # Navigation with RBAC
 │   └── ...
 │
-├── hooks/                 # Custom React hooks
+├── hooks/                 # Hooks used by 2+ features (.ts unless they render JSX)
 │   ├── use-nav.ts         # RBAC navigation filtering
 │   ├── use-data-table.ts  # Data table state
 │   └── ...
 │
-├── lib/                   # Utility functions
+├── lib/                   # Helpers used by 2+ features; related files in a sub-folder
 │   ├── utils.ts           # cn() and formatters
-│   ├── searchparams.ts    # Search param utilities
+│   ├── query-client.ts    # Query client (one per request on the server)
+│   ├── format.ts          # formatDate, formatCurrency, getInitials, SHORT_DATE_FORMAT
+│   ├── data-table/        # Table features, filters, parsers, types, utils
 │   └── ...
 │
-├── types/                 # TypeScript type definitions
-│   └── index.ts           # Core types (NavItem, etc.)
+├── stores/                # Zustand stores used by 2+ features (ui-preferences)
+│
+├── types/                 # Types used by 2+ features
+│   └── index.ts           # NavItem, NavGroup, PermissionCheck
 │
 └── styles/                # Global styles
     ├── globals.css        # Tailwind imports + view transitions
@@ -171,7 +204,7 @@ bun run prepare      # Install Husky hooks
 
 ## Environment Configuration
 
-Copy `env.example.txt` to `.env.local` and configure:
+Copy `.env.example` to `.env.local` and configure:
 
 ## Code Style Guidelines
 
@@ -281,6 +314,8 @@ export const navGroups: NavGroup[] = [
 
 ## Data Fetching Patterns
 
+Full guide: [docs/data-fetching.md](./docs/data-fetching.md) (keys, defaults, caching rules, invalidation, optimistic updates, pagination, infinite, polling, select, cancellation, mutation state, server components / actions / route handlers). Working examples: `/dashboard/examples/data-fetching/*` and `/dashboard/examples/server/*`.
+
 ### Service Layer Architecture
 
 Each feature has a three-file API layer:
@@ -379,8 +414,8 @@ const mutation = useMutation({
 
 Use `nuqs` for search params state:
 
-- `searchParamsCache` (server) — reads params in server components
-- `useQueryState` (client) — reads/writes params in client components with `shallow: true`
+- `createSearchParamsCache` per feature (server) — e.g. `partnersSearchParamsCache` in `features/partners/lib/search-params-cache.ts`, parsed in `page.tsx`
+- `useQueryStates` (client) — reads/writes params in client components with `shallow: true`, using the same parsers
 
 ### Data Tables
 
@@ -389,7 +424,7 @@ Tables use TanStack Table v9 (DiceUI data table) with React Query:
 - Query options in `features/*/api/queries.ts`
 - Column definitions in `features/*/components/*-tables/columns.tsx`, typed `ColumnDef<DataTableFeatures, T>[]`
 - Table component in `src/components/data-table/data-table.tsx`
-- Feature set + `DataTableFeatures` type in `src/lib/data-table-features.ts`; URL parsers in `src/lib/data-table-parsers.ts`
+- Feature set + `DataTableFeatures` type in `src/lib/data-table/features.ts`; URL parsers in `src/lib/data-table/parsers.ts`
 - Column pinning via `initialState.columnPinning` (`{ start: [], end: ['actions'] }`) in `useDataTable`
 
 ---
@@ -504,7 +539,7 @@ export const Icons = {
 
 ### Icon Showcase Page
 
-Browse all available icons at `/dashboard/elements/icons` — a searchable grid of every icon in the registry.
+Browse all available icons at `/dashboard/examples/icons` — a searchable grid of every icon in the registry.
 
 ### Why This Pattern?
 
@@ -518,6 +553,8 @@ Browse all available icons at `/dashboard/elements/icons` — a searchable grid 
 ## Common Development Tasks
 
 ### Adding a New Feature (End-to-End)
+
+Copy the shape of `src/features/partners` (table + detail) or `src/features/payouts` (table + sheet form). The pages under `/dashboard/examples` are extra reference for patterns the app doesn't use yet: multi-step forms and every field type; data fetching (public vs signed-in, caching, pagination, infinite, dependent/parallel, prefetch on intent, polling/select/cancel, optimistic updates); server-side calls (server component, server action, route handler proxy); access control; client state. Their code is in `src/features/examples/`.
 
 1. Create `src/features/<name>/api/types.ts` — response types, filter types, mutation payloads
 2. Create `src/features/<name>/api/service.ts` — data access functions (mock by default)
@@ -584,7 +621,7 @@ See "Theming System" section above or `docs/themes.md`.
 9. **Page headers** - Always use `PageContainer` props (`pageTitle`, `pageDescription`, `pageHeaderAction`) for page headers. Never import `<Heading>` manually in pages — `PageContainer` handles that internally.
 10. **Forms** - Use `useAppForm` from `@/lib/form` with `form.AppField` rendering the shared field components (`field.TextField`, `field.SelectField`, …) from `@/components/forms/fields`. Each component follows the official shadcn TanStack Form anatomy; drop down to raw `form.Field` render props for one-off custom fields. Never use `useState` inside a render prop — extract stateful controls into components.
 11. **Button loading** - Use `<Button isLoading={isPending}>` for loading states. Uses CSS Grid overlap trick for zero layout shift. When `isLoading` is not passed, button behaves as default shadcn. `SubmitButton` in forms handles this automatically via form `isSubmitting` state.
-12. **Data layer** - Always go through the service layer: `types.ts` → `service.ts` → `queries.ts`. Components import types from `types.ts`, functions from `service.ts`, query options from `queries.ts`. Never import from `@/constants/mock-api*` directly in components.
+12. **Data layer** - Always go through the service layer: `types.ts` → `service.ts` → `queries.ts`. Components import types from `types.ts`, functions from `service.ts`, query options from `queries.ts`. Never import from `src/app/api/_mock` in features or components.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

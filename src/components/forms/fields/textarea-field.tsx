@@ -34,11 +34,11 @@ export function TextareaField({
         aria-describedby={isInvalid ? `${field.name}-error` : undefined}
         {...textareaProps}
       />
-      {showCount && textareaProps.maxLength && (
+      {showCount && textareaProps.maxLength ? (
         <div className='text-muted-foreground text-right text-sm'>
           {field.state.value?.length || 0} / {textareaProps.maxLength}
         </div>
-      )}
+      ) : null}
       {description && <FieldDescription>{description}</FieldDescription>}
       {isInvalid && <FieldError id={`${field.name}-error`} errors={field.state.meta.errors} />}
     </Field>

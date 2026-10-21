@@ -7,8 +7,8 @@ type Options = Omit<RequestOptions, 'method'>;
  * httpOnly auth cookie); pass `{ auth: false }` for public endpoints.
  *
  *   api.get<Plan[]>('/plans', { auth: false })
- *   api.get<ProductsResponse>('/products', { query: filters })
- *   api.post<Product>('/products', { body: payload })
+ *   api.get<PartnersResponse>('/partners', { query: filters })
+ *   api.post<Payout>('/payouts', { body: payload })
  */
 export const api = {
   get: <T>(path: string, options?: Options) =>
@@ -24,5 +24,6 @@ export const api = {
 };
 
 export { ApiError, isApiError } from './errors';
-export { API_URL, AUTH, HTTP_STATUS } from './config';
+export { API_URL, AUTH, CACHE_CONTROL, HTTP_STATUS } from './config';
+export { NEXT_PARAM, safeNextPath, signInUrl } from './redirect';
 export type { RequestOptions } from './http';

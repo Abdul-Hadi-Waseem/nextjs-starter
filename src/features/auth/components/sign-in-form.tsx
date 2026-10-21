@@ -5,35 +5,32 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { FieldGroup } from '@/components/ui/field';
-import { AUTH, isApiError } from '@/lib/api';
+import { isApiError, NEXT_PARAM, safeNextPath } from '@/lib/api';
 import { useAppForm } from '@/lib/form';
 import { loginMutation } from '../api/mutations';
-import { DEMO_ADMIN } from '../constants';
+import { DEMO_ADMIN } from '../constants/auth';
 import { loginSchema, type LoginFormValues } from '../schemas/login';
-
-// Only follow same-site relative paths, never `//evil.com` or absolute URLs.
-function safeNextPath(next: string | null) {
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : AUTH.homePath;
-}
 
 export function SignInForm({ showDemoHint }: { showDemoHint: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const mutation = useMutation({
-    ...loginMutation,
-    onSuccess: (data, variables, onMutateResult, context) => {
-      loginMutation.onSuccess?.(data, variables, onMutateResult, context);
-      router.replace(safeNextPath(searchParams.get('next')));
-      router.refresh();
-    }
-  });
+  // The shared onSuccess (caches the user) stays; the redirect is a per-call callback.
+  const mutation = useMutation(loginMutation);
 
   const form = useAppForm({
     defaultValues: { email: '', password: '' } as LoginFormValues,
     validators: { onSubmit: loginSchema },
     onSubmit: async ({ value }) => {
-      await mutation.mutateAsync(value).catch(() => undefined);
+      // The error is shown from mutation.error below, so the rejection is swallowed here.
+      await mutation
+        .mutateAsync(value, {
+          onSuccess: () => {
+            router.replace(safeNextPath(searchParams.get(NEXT_PARAM)));
+            router.refresh();
+          }
+        })
+        .catch(() => undefined);
     }
   });
 

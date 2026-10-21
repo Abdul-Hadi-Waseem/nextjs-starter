@@ -5,9 +5,9 @@ import type { ReactTable, RowData } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 
-import type { DataTableFeatures } from '@/lib/data-table-features';
+import type { DataTableFeatures } from '@/lib/data-table/features';
 
-import { getVisibleSelectedRows } from '@/lib/data-table-utils';
+import { getVisibleSelectedRows } from '@/lib/data-table/utils';
 import { Button } from '@/components/ui/button';
 import { useDirection } from '@/components/ui/direction';
 import {

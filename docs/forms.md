@@ -185,31 +185,36 @@ typechecking stays fast at 40+ fields.
 
 ## Template-specific notes
 
-**Submitting with React Query.** `onSubmit` awaits the mutation; success/error
-handling lives on the mutation (see `features/products/components/product-form.tsx`):
+**Submitting with React Query.** `onSubmit` awaits the mutation; cache
+invalidation lives on the mutation (`features/payouts/api/mutations.ts`), and
+the form only handles the result (see `features/payouts/components/payout-form.tsx`,
+which also paints the server's field errors onto the matching fields):
 
 ```tsx
 onSubmit: async ({ value }) => {
-  await createMutation.mutateAsync(value);
+  await createMutation.mutateAsync(toPayoutPayload(value));
 };
 ```
 
 **Sheet / Dialog forms.** The submit button lives in the footer, outside the
 `<form>` element, connected via the HTML `form` attribute
-(`features/users/components/user-form-sheet.tsx`):
+(`features/payouts/components/payout-form.tsx`):
 
 ```tsx
-<form id='user-form-sheet' onSubmit={…}>…</form>
+<form id={PAYOUT_FORM_ID} onSubmit={…}>…</form>
 <SheetFooter>
-  <Button type='submit' form='user-form-sheet'>Save</Button>
+  <LoadingButton type='submit' form={PAYOUT_FORM_ID}>Create payout</LoadingButton>
 </SheetFooter>
 ```
+
+The sheet itself (`payout-sheet.tsx`) opens from the URL (`?new=1`) and loads
+the form with a dynamic import, so the heavy fields only download when it opens.
 
 **Multi-step forms.** `useFormStepper(stepSchemas, { fullSchema })` from
 `@/hooks/use-stepper` gates step navigation: `Next` validates the current
 step's schema and paints its errors; the final submit re-validates the whole
-schema and never submits invalid data. Route every submit through the gate —
-see `features/forms/components/multi-step-product-form.tsx`.
+schema. Route every submit through the gate. Reference:
+`src/features/examples/forms/components/multi-step-product-form.tsx`.
 
 **Number inputs.** `TextField type='number'` already converts at the edge;
 give required numbers a human message: `z.number({ error: 'Price is required' })`.
@@ -235,12 +240,22 @@ give required numbers a human message: `z.number({ error: 'Price is required' })
 
 ## Examples in the dashboard
 
+Start from the app's own forms:
+
+| Form | Route | Demonstrates |
+| --- | --- | --- |
+| Payout form | `/dashboard/payouts?new=1` | Sheet form with an external submit button, `ComboboxField` + `DatePickerField` imported directly, a raw `form.Field` (amount input group), server field errors |
+| Profile form | `/dashboard/settings` | Edit form prefilled from a query, `useMutation` on submit |
+| Sign-in | `/auth/sign-in` | `TextField` + `PasswordField`, form-level error |
+
+More patterns in the reference examples (sidebar → Examples → Forms):
+
 | Page | Route | Demonstrates |
 | --- | --- | --- |
-| Basic Form | `/dashboard/forms/basic` | All 16 field components incl. array-mode groups, pickers, OTP, tags, upload |
-| Advanced | `/dashboard/forms/advanced` | Async validation, linked fields (`onChangeListenTo`), nested paths, raw `form.Field` object-row arrays, listener side effects |
-| Multi-Step | `/dashboard/forms/multi-step` | Per-step schemas, validation gate, review step |
-| Sheet Form | `/dashboard/forms/sheet-form` | Sheet + Dialog forms with external submit buttons |
+| Basic | `/dashboard/examples/forms/basic` | All 16 field components incl. array-mode groups, pickers, OTP, tags, upload |
+| Multi-step | `/dashboard/examples/forms/multi-step` | Per-step schemas, validation gate, review step |
+| Sheet & dialog | `/dashboard/examples/forms/sheet-form` | Sheet + Dialog forms with external submit buttons |
+| Advanced | `/dashboard/examples/forms/advanced` | Async validation, linked fields (`onChangeListenTo`), nested paths, raw `form.Field` object-row arrays, listener side effects |
 
 ## Heavy fields: import them directly
 

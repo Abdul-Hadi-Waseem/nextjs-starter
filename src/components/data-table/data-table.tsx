@@ -22,14 +22,14 @@ import {
 } from '@/components/ui/empty';
 import * as React from 'react';
 
-import type { DataTableFeatures } from '@/lib/data-table-features';
+import type { DataTableFeatures } from '@/lib/data-table/features';
 
 import {
   getAriaSort,
   getColumnPinningStyle,
   getColumnSizingStyle,
   getVisibleSelectedRows
-} from '@/lib/data-table-utils';
+} from '@/lib/data-table/utils';
 import { DataTablePagination } from '@/components/data-table/data-table-pagination';
 import { useDirection } from '@/components/ui/direction';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';

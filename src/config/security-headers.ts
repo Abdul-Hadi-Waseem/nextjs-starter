@@ -5,8 +5,8 @@
 // switch to a nonce-based CSP in src/proxy.ts (every page here is already
 // dynamically rendered). See node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md.
 
-// Third-party origins the browser talks to directly. Remove the demo ones
-// (pokeapi.co is only used by the React Query demo page) when you delete demos.
+// Third-party origins the browser talks to directly (besides the API).
+// pokeapi.co is only used by the React Query example page; remove it with the examples.
 const EXTRA_CONNECT_SRC = ['https://pokeapi.co'];
 
 type Options = {
@@ -29,8 +29,13 @@ export function buildCsp({ isDev, apiUrl, imageHosts, cfImageBase }: Options) {
   const imageOrigins = imageHosts.map(({ protocol, hostname }) => `${protocol}://${hostname}`);
   const directives: Record<string, string[]> = {
     'default-src': ["'self'"],
-    // 'unsafe-eval' only in dev: React uses eval for better error stacks.
-    'script-src': ["'self'", "'unsafe-inline'", ...(isDev ? ["'unsafe-eval'"] : [])],
+    // Dev only: 'unsafe-eval' (React's dev build uses eval to rebuild server error stacks
+    // in the browser) and unpkg for React Scan (`bun run dev:scan`).
+    'script-src': [
+      "'self'",
+      "'unsafe-inline'",
+      ...(isDev ? ["'unsafe-eval'", 'https://unpkg.com'] : [])
+    ],
     // Inline styles: style props (charts, skeletons) and libraries that set them.
     'style-src': ["'self'", "'unsafe-inline'"],
     'img-src': ["'self'", 'data:', 'blob:', ...imageOrigins, originOf(cfImageBase)].filter(

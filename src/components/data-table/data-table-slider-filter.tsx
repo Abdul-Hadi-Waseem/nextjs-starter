@@ -4,7 +4,7 @@ import { type Column, type RowData, Subscribe } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 
-import type { DataTableFeatures } from '@/lib/data-table-features';
+import type { DataTableFeatures } from '@/lib/data-table/features';
 
 import { Button } from '@/components/ui/button';
 import { useDirection } from '@/components/ui/direction';
@@ -119,25 +119,20 @@ function DataTableSliderFilterContent<TData extends RowData>({
     return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
   }, []);
 
-  const onFromInputChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const numValue = Number(event.target.value);
-      if (!Number.isNaN(numValue) && numValue >= min && numValue <= range[1]) {
-        column.setFilterValue([numValue, range[1]]);
-      }
-    },
-    [column, min, range]
-  );
+  // Plain handlers: `range` is a new array every render, so useCallback never memoized them.
+  function onFromInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const numValue = Number(event.target.value);
+    if (!Number.isNaN(numValue) && numValue >= min && numValue <= range[1]) {
+      column.setFilterValue([numValue, range[1]]);
+    }
+  }
 
-  const onToInputChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const numValue = Number(event.target.value);
-      if (!Number.isNaN(numValue) && numValue <= max && numValue >= range[0]) {
-        column.setFilterValue([range[0], numValue]);
-      }
-    },
-    [column, max, range]
-  );
+  function onToInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const numValue = Number(event.target.value);
+    if (!Number.isNaN(numValue) && numValue <= max && numValue >= range[0]) {
+      column.setFilterValue([range[0], numValue]);
+    }
+  }
 
   const onSliderValueChange = React.useCallback(
     (value: number | readonly number[]) => {

@@ -50,7 +50,8 @@ function gzipSize(chunk) {
 }
 
 // `/dashboard/(group)/x/page` → `/dashboard/x`; a parallel-route slot
-// (`/dashboard/overview/@sales/page`) belongs to its parent route.
+// (`/dashboard/x/@slot/page`) belongs to its parent route. The app has neither
+// today; this keeps the numbers right if one is added.
 function toRoute(manifestKey) {
   const route = manifestKey
     .replace(/\/page$/, '')
@@ -81,7 +82,7 @@ for (const file of findManifests(APP_DIR)) {
   rows.set(route, { route, kb, limit: budget.routes?.[route] ?? budget.default });
 }
 
-const sorted = [...rows.values()].sort((a, b) => b.kb - a.kb);
+const sorted = [...rows.values()].toSorted((a, b) => b.kb - a.kb);
 
 const pad = Math.max(...sorted.map((row) => row.route.length));
 console.log(`${'Route'.padEnd(pad)}  First-load JS (gzip)  Budget`);

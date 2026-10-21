@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { meQueryOptions } from '@/features/auth/api/queries';
 import { hasAccess } from '@/features/auth/lib/access';
 import type { AuthUser } from '@/features/auth/api/types';
@@ -18,15 +19,14 @@ function filterItems(items: NavItem[], user: AuthUser | undefined): NavItem[] {
     .map((item) => (item.items ? { ...item, items: filterItems(item.items, user) } : item));
 }
 
-export function useFilteredNavItems(items: NavItem[]) {
-  const user = useCurrentUser();
-  return AUTH.enabled ? filterItems(items, user) : items;
-}
-
+// Memoized on the user, so callers (the command palette's `actions` memo) get the same
+// array across renders instead of a new one every time.
 export function useFilteredNavGroups(groups: NavGroup[]) {
   const user = useCurrentUser();
-  if (!AUTH.enabled) return groups;
-  return groups
-    .map((group) => ({ ...group, items: filterItems(group.items, user) }))
-    .filter((group) => group.items.length > 0);
+  return useMemo(() => {
+    if (!AUTH.enabled) return groups;
+    return groups
+      .map((group) => ({ ...group, items: filterItems(group.items, user) }))
+      .filter((group) => group.items.length > 0);
+  }, [groups, user]);
 }

@@ -10,7 +10,7 @@ import {
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 
-import type { DataTableFeatures } from '@/lib/data-table-features';
+import type { DataTableFeatures } from '@/lib/data-table/features';
 
 import { useDirection } from '@/components/ui/direction';
 import {

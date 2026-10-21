@@ -12,6 +12,12 @@ import '../styles/globals.css';
 import { env } from '@/env';
 import { SITE } from '@/config/site';
 
+// React Scan, Next.js App Router setup option 1 from its docs (script tag before any other script):
+// https://github.com/aidenybai/react-scan/blob/main/docs/installation/next-js-app-router.md
+// Only in `bun run dev:scan`; production builds render nothing here.
+const REACT_SCAN_SRC = 'https://unpkg.com/react-scan@0.5.7/dist/auto.global.js';
+const SHOW_REACT_SCAN = env.NODE_ENV === 'development' && env.NEXT_PUBLIC_REACT_SCAN;
+
 const META_THEME_COLORS = {
   light: '#ffffff',
   dark: '#09090b'
@@ -51,6 +57,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang='en' suppressHydrationWarning data-theme={themeToApply}>
       <head>
+        {/* Synchronous on purpose: React Scan must load before React (dev only). */}
+        {/* eslint-disable-next-line nextjs/no-sync-scripts */}
+        {SHOW_REACT_SCAN && <script src={REACT_SCAN_SRC} />}
+        {/* rest of your scripts go under */}
         <script
           dangerouslySetInnerHTML={{
             __html: `

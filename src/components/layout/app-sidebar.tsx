@@ -1,5 +1,5 @@
 'use client';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import * as React from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -10,27 +10,32 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  SidebarRail
+  SidebarRail,
+  useSidebar
 } from '@/components/ui/sidebar';
 import { navGroups } from '@/config/nav-config';
 import { useFilteredNavGroups } from '@/hooks/use-nav';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icons } from '@/components/icons';
+import { NavCollapsible } from './nav-collapsible';
 import { SidebarBrand } from './sidebar-brand';
 import { SidebarUser } from './sidebar-user';
 
-export default function AppSidebar() {
+export function AppSidebar() {
   const pathname = usePathname();
   const filteredGroups = useFilteredNavGroups(navGroups);
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  // The mobile sheet stays open after a client navigation unless closed here.
+  const closeMobile = React.useCallback(() => {
+    if (isMobile) setOpenMobile(false);
+  }, [isMobile, setOpenMobile]);
 
   return (
-    <Sidebar collapsible='icon'>
+    <Sidebar variant='inset' collapsible='icon'>
       <SidebarHeader>
-        <SidebarBrand />
+        <SidebarBrand onNavigate={closeMobile} />
       </SidebarHeader>
       <SidebarContent className='overflow-x-hidden'>
         {filteredGroups.map((group) => (
@@ -38,45 +43,23 @@ export default function AppSidebar() {
             {group.label && <SidebarGroupLabel>{group.label}</SidebarGroupLabel>}
             <SidebarMenu>
               {group.items.map((item) => {
+                if (item.items && item.items.length > 0) {
+                  return (
+                    <NavCollapsible
+                      key={item.title}
+                      item={{ ...item, items: item.items }}
+                      pathname={pathname}
+                      onNavigate={closeMobile}
+                    />
+                  );
+                }
                 const Icon = item.icon ? Icons[item.icon] : Icons.logo;
-                return item?.items && item?.items?.length > 0 ? (
-                  <Collapsible
-                    key={item.title}
-                    defaultOpen={item.isActive}
-                    render={<SidebarMenuItem />}
-                  >
-                    <CollapsibleTrigger
-                      render={
-                        <SidebarMenuButton
-                          tooltip={item.title}
-                          isActive={pathname === item.url}
-                          className='group/collapsible'
-                        />
-                      }
-                    >
-                      {item.icon && <Icon />}
-                      <span>{item.title}</span>
-                      <Icons.chevronRight className='ml-auto transition-transform duration-200 group-data-panel-open/collapsible:rotate-90' />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.items?.map((subItem) => (
-                          <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton
-                              render={<Link href={subItem.url} aria-label={subItem.title} />}
-                              isActive={pathname === subItem.url}
-                            >
-                              <span>{subItem.title}</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </Collapsible>
-                ) : (
+                return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
-                      render={<Link href={item.url} aria-label={item.title} />}
+                      render={
+                        <Link href={item.url} aria-label={item.title} onClick={closeMobile} />
+                      }
                       tooltip={item.title}
                       isActive={pathname === item.url}
                     >

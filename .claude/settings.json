@@ -12,7 +12,8 @@
       "Bash(bun run analyze:report)",
       "Bash(bun run bundle:check)",
       "Bash(bun run images:check)",
-      "Bash(bunx shadcn@latest add:*)"
+      "Bash(bunx shadcn@latest add:*)",
+      "Bash(node .claude/hooks/review-on-stop.mjs --mark)"
     ]
   },
   "hooks": {
@@ -33,6 +34,10 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/typecheck-on-stop.mjs"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/review-on-stop.mjs"
           }
         ]
       }

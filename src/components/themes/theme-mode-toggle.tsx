@@ -12,15 +12,15 @@ import { startThemeTransition } from '@/lib/theme-transition';
 export function ThemeModeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
 
-  const handleThemeToggle = React.useCallback(
-    (e?: React.MouseEvent) => {
-      const newMode = resolvedTheme === 'dark' ? 'light' : 'dark';
-      // Circular reveal from the click point (falls back to center for the
-      // keyboard shortcut, which passes no event).
-      startThemeTransition(() => setTheme(newMode), e);
-    },
-    [resolvedTheme, setTheme]
-  );
+  function handleThemeToggle(e?: React.MouseEvent) {
+    const newMode = resolvedTheme === 'dark' ? 'light' : 'dark';
+    // Circular reveal from the click point (falls back to center for the
+    // keyboard shortcut, which passes no event).
+    startThemeTransition(() => setTheme(newMode), e);
+  }
+
+  // Reads the latest theme without re-subscribing the keydown listener on every toggle.
+  const onShortcut = React.useEffectEvent(() => handleThemeToggle());
 
   // Cmd/Ctrl+Shift+D toggles the theme; kbar separately handles the 'D D' sequence
   React.useEffect(() => {
@@ -36,11 +36,11 @@ export function ThemeModeToggle() {
         return;
       }
       e.preventDefault();
-      handleThemeToggle();
+      onShortcut();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleThemeToggle]);
+  }, []);
 
   return (
     <Tooltip>
@@ -50,7 +50,7 @@ export function ThemeModeToggle() {
             variant='secondary'
             size='icon'
             className='group/toggle size-8'
-            onClick={handleThemeToggle}
+            onClick={(e) => handleThemeToggle(e)}
           />
         }
       >

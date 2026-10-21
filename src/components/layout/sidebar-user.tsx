@@ -16,27 +16,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { logoutMutation } from '@/features/auth/api/mutations';
 import { meQueryOptions } from '@/features/auth/api/queries';
 import { AUTH } from '@/lib/api';
-
-function initials(name: string) {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
+import { getInitials } from '@/lib/format';
 
 // Signed-in user from /auth/me, with sign out. Same height while loading so the
 // footer doesn't jump.
 export function SidebarUser() {
   const { data, isPending } = useQuery(meQueryOptions());
-  const logout = useMutation({
-    ...logoutMutation,
-    onSettled: (result, error, variables, onMutateResult, context) => {
-      logoutMutation.onSettled?.(result, error, variables, onMutateResult, context);
-      window.location.assign(AUTH.signInPath);
-    }
-  });
+  const logout = useMutation(logoutMutation);
 
   if (isPending) {
     return (
@@ -66,7 +52,9 @@ export function SidebarUser() {
             }
           >
             <Avatar className='size-8 rounded-lg'>
-              <AvatarFallback className='rounded-lg text-xs'>{initials(user.name)}</AvatarFallback>
+              <AvatarFallback className='rounded-lg text-xs'>
+                {getInitials(user.name)}
+              </AvatarFallback>
             </Avatar>
             <span className='grid flex-1 text-left text-sm leading-tight'>
               <span className='truncate font-medium'>{user.name}</span>
@@ -86,7 +74,15 @@ export function SidebarUser() {
             {AUTH.enabled && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => logout.mutate()} disabled={logout.isPending}>
+                <DropdownMenuItem
+                  onClick={() =>
+                    logout.mutate(undefined, {
+                      // Whatever the server says, go to sign-in (the shared onSettled clears the cache).
+                      onSettled: () => window.location.assign(AUTH.signInPath)
+                    })
+                  }
+                  disabled={logout.isPending}
+                >
                   <Icons.logout />
                   {logout.isPending ? 'Signing out…' : 'Sign out'}
                 </DropdownMenuItem>

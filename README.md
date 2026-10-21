@@ -10,7 +10,7 @@
 
 ## Overview
 
-A dashboard starter for partner portals, internal tools and admin panels. Tables, forms and charts work end to end, and the repo ships with Claude Code skills and conventions so every developer's agent follows the same patterns.
+A dashboard starter for partner portals, internal tools and admin panels. It ships a working partner-payouts dashboard (overview, partners, payouts, settings) on a mock API, so tables, forms and charts work end to end. The repo also ships Claude Code skills and conventions so every developer's agent follows the same patterns.
 
 ## Tech Stack
 
@@ -25,29 +25,49 @@ A dashboard starter for partner portals, internal tools and admin panels. Tables
 
 ## Pages
 
-| Page | Notes |
-| :--- | :--- |
-| Dashboard Overview | Cards and charts. Parallel routes give each section its own loading and error state. |
-| Products (table) | TanStack Table + React Query with nuqs URL state for search, filter and pagination. |
-| Create / edit product | TanStack Form + Zod with `useMutation`; the cache is invalidated on success. |
-| Users (table) | Same setup as Products. |
-| Forms examples | Basic, advanced, multi-step and sheet forms. |
-| React Query demo | Server prefetch, `HydrationBoundary` and `useSuspenseQuery` with a client cache. |
+### App pages
+
+The partner-payouts dashboard. Copy these when you build a feature.
+
+| Page | Route | Notes |
+| :--- | :--- | :--- |
+| Products | `/dashboard/examples/tables/products` | Table with URL state, create/edit page with an image upload. |
+| Users | `/dashboard/examples/tables/users` | Table with a sheet form. Admin only. |
+| Forms | `/dashboard/examples/forms/{basic,multi-step,sheet-form,advanced}` | Every field component, multi-step wizard, sheet and dialog forms, advanced patterns. |
+| React Query | `/dashboard/examples/data-fetching/react-query` | Server prefetch, `HydrationBoundary` and `useSuspenseQuery` against a public API (PokeAPI). |
+| Public vs signed-in | `/dashboard/examples/data-fetching/public-vs-auth` | `auth: false` call prefetched on the server next to a signed-in call in the browser, and what each returns without a cookie. |
+| Caching | `/dashboard/examples/data-fetching/caching` | Public data in the Next.js server cache with a tag and `updateTag`; per-user data in TanStack Query only (`staleTime`/`gcTime`); `Cache-Control` headers. |
+| Pagination | `/dashboard/examples/data-fetching/pagination` | `keepPreviousData`, page in the URL, next page prefetched. |
+| Infinite list | `/dashboard/examples/data-fetching/infinite` | `useSuspenseInfiniteQuery` with Load more. |
+| Dependent & parallel | `/dashboard/examples/data-fetching/dependent` | `enabled` for a query that waits on a pick; `useSuspenseQueries`. |
+| Prefetch on intent | `/dashboard/examples/data-fetching/prefetch` | `prefetchQuery` on hover and focus. |
+| Polling, select & cancel | `/dashboard/examples/data-fetching/polling` | `refetchInterval`, `isFetching` vs `isPending`, `select`, request cancellation via `signal`. |
+| Optimistic updates | `/dashboard/examples/data-fetching/optimistic` | Cache update with rollback, rendering pending variables, `useIsMutating`/`useMutationState`, a switch that fails the next request. |
+| Server component | `/dashboard/examples/server/server-component` | Async server component calling `api.get` with the forwarded cookie, streamed in `<Suspense>`. |
+| Server action | `/dashboard/examples/server/server-action` | `useActionState` form; the action checks the session, validates with zod, calls the backend and calls `refresh()`. |
+| Route handler proxy | `/dashboard/examples/server/route-handler` | BFF route that adds a server-only `BACKEND_API_KEY`, with an allowlist and a timeout. |
+| Access control | `/dashboard/examples/access` (+ `/access/admin`) | `hasAccess` in a client component, `requireAccess` on an admin-only page, nav `access`. |
+| Client state | `/dashboard/examples/client-state` | Zustand store with `persist` + `skipHydration` and one-field selectors. |
+| Icons | `/dashboard/examples/icons` | Every icon in `@/components/icons`. |
+
+They are safe to delete. Remove `src/app/dashboard/examples`, the feature folder `src/features/examples`, their mock routes `src/app/api/{examples,products,users}`, their mock stores `src/app/api/_mock/db/{examples,products,users}.ts` and `src/app/api/_mock/failure.ts`, `BACKEND_API_KEY` in `src/env.ts` and `.env.example` (unless you keep a BFF route), and the **Examples** group (with its `@/features/examples` import) in `src/config/nav-config.ts`. Then drop the example image hosts in `src/config/images.ts`, `pokeapi.co` in `src/config/security-headers.ts`, and run `bun run typecheck` to find anything left over.
 
 ## Folder Structure
 
 ```plaintext
 src/
-├── app/            # App Router: dashboard routes and API routes
+├── app/            # App Router: dashboard routes, dashboard/examples, API routes (mocks in api/_mock/)
 ├── components/     # Shared UI: ui/, layout/, forms/, data-table/, themes/, kbar/
-├── features/       # Feature modules: overview, products, users, forms, ...
-├── lib/            # query client, search params, form setup, utils
+├── features/       # Feature modules: auth, overview, partners, payouts, settings (+ examples/)
+├── lib/            # API client, query client, form setup, data-table/ helpers, utils
 ├── hooks/          # Custom hooks
-├── config/         # Navigation and infobar config
-├── constants/      # Mock data
+├── config/         # Navigation, site name, security headers, image hosts
+├── stores/         # Shared Zustand stores
 ├── styles/         # Global CSS and themes
 └── types/          # Shared types
 ```
+
+What goes where, and the `shared/` rule: [docs/frontend.md "Folder structure"](docs/frontend.md#folder-structure).
 
 ## Getting Started
 
@@ -57,7 +77,7 @@ On GitHub, click **Use this template**, or clone the repo:
 git clone https://github.com/Abdul-Hadi-Waseem/nextjs-starter.git
 cd nextjs-starter
 bun run setup            # installs deps and enables the git hooks
-cp env.example.txt .env.local
+cp .env.example .env.local
 bun run dev
 ```
 
@@ -82,7 +102,8 @@ The app runs at http://localhost:3000. For a production build, set `NEXT_PUBLIC_
 
 ## Documentation
 
-- [docs/frontend.md](./docs/frontend.md): where queries, mutations, auth, images and components go
+- [docs/frontend.md](./docs/frontend.md): where features, auth, images and components go
+- [docs/data-fetching.md](./docs/data-fetching.md): queries, mutations, caching and server-side calls
 - [docs/forms.md](./docs/forms.md): the form system
 - [docs/themes.md](./docs/themes.md): themes and fonts
 

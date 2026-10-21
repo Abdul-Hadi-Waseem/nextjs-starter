@@ -161,18 +161,20 @@ export function FileUploader(props: FileUploaderProps) {
     onValueChange?.(newFiles);
   }
 
-  // Revoke preview url when component unmounts
+  // Revoke the preview URLs on unmount. The cleanup reads the latest files from a ref:
+  // closing over `files` would only see the (usually empty) first render's list.
+  const filesRef = React.useRef(files);
   React.useEffect(() => {
-    return () => {
-      if (!files) return;
-      files.forEach((file) => {
-        if (isFileWithPreview(file)) {
-          URL.revokeObjectURL(file.preview);
-        }
+    filesRef.current = files;
+  }, [files]);
+  React.useEffect(
+    () => () => {
+      filesRef.current?.forEach((file) => {
+        if (isFileWithPreview(file)) URL.revokeObjectURL(file.preview);
       });
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    },
+    []
+  );
 
   const isDisabled = disabled || (files?.length ?? 0) >= maxFiles;
 
