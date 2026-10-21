@@ -105,6 +105,11 @@ The backend issues the auth token as an **httpOnly cookie**. The frontend never 
 
 **Mock backend.** Out of the box, `NEXT_PUBLIC_API_URL` points at this app's own route handlers in `src/app/api/` (products, users, `auth/login|logout|me`). With auth enabled they return 401 without the cookie, just like a real backend. Point `NEXT_PUBLIC_API_URL` at your backend and delete `src/app/api/` when you connect a real one.
 
+Two production safeguards:
+
+- **The mock API is off in production.** Every mock handler answers 404 unless `ENABLE_MOCK_API=true`. Only set that for a demo deployment; the mock login accepts any password.
+- **`NEXT_PUBLIC_API_URL` is required to build for production.** `bun run build` fails without it, so a deployment can't silently call `localhost`.
+
 **Backend checklist** for cookie auth to work and stay safe:
 
 1. Cookie flags: `HttpOnly; Secure; SameSite=Lax; Path=/`, short expiry, refresh-token rotation.

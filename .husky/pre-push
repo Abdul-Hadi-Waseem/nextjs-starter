@@ -3,5 +3,6 @@ bun run format:check
 bun run typecheck
 bun run lint
 bun run images:check
-bun run build
+# Verification build only (not deployed), so fall back to the local mock API URL.
+NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-http://localhost:3000/api}" bun run build
 bun run bundle:check

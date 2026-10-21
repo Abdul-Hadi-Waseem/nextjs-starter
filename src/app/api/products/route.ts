@@ -18,8 +18,11 @@
 import { fakeProducts } from '@/constants/mock-api';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSession } from '@/app/api/_mock/auth';
+import { mockApiDisabled } from '@/app/api/_mock/guard';
 
 export async function GET(request: NextRequest) {
+  const disabled = mockApiDisabled();
+  if (disabled) return disabled;
   const unauthorized = requireSession(request);
   if (unauthorized) return unauthorized;
 
@@ -43,6 +46,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const disabled = mockApiDisabled();
+  if (disabled) return disabled;
   const unauthorized = requireSession(request);
   if (unauthorized) return unauthorized;
 

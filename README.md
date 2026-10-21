@@ -61,7 +61,7 @@ cp env.example.txt .env.local
 bun run dev
 ```
 
-The app runs at http://localhost:3000.
+The app runs at http://localhost:3000. For a production build, set `NEXT_PUBLIC_API_URL` to your backend; the build fails without it, and the built-in mock API is switched off in production.
 
 **Git hooks** (Husky): `pre-commit` formats and lints staged files; `pre-push` runs every gate (format, typecheck, lint, image policy, build, bundle budget) and blocks the push if any fail. `git push --no-verify` skips it, so treat that as an emergency exit only. npm works too; Bun is preferred.
 

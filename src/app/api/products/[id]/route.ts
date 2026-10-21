@@ -7,10 +7,13 @@
 import { fakeProducts } from '@/constants/mock-api';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSession } from '@/app/api/_mock/auth';
+import { mockApiDisabled } from '@/app/api/_mock/guard';
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(request: NextRequest, { params }: Params) {
+  const disabled = mockApiDisabled();
+  if (disabled) return disabled;
   const unauthorized = requireSession(request);
   if (unauthorized) return unauthorized;
 
@@ -25,6 +28,8 @@ export async function GET(request: NextRequest, { params }: Params) {
 }
 
 export async function PUT(request: NextRequest, { params }: Params) {
+  const disabled = mockApiDisabled();
+  if (disabled) return disabled;
   const unauthorized = requireSession(request);
   if (unauthorized) return unauthorized;
 
@@ -40,6 +45,8 @@ export async function PUT(request: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(request: NextRequest, { params }: Params) {
+  const disabled = mockApiDisabled();
+  if (disabled) return disabled;
   const unauthorized = requireSession(request);
   if (unauthorized) return unauthorized;
 

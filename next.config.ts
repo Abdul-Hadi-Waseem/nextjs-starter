@@ -1,7 +1,15 @@
 import type { NextConfig } from 'next';
-import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
+import { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_BUILD } from 'next/constants';
 
 export default function nextConfig(phase: string): NextConfig {
+  // A production build must know the real backend; the dev default (this app's
+  // mock API on localhost) would silently ship otherwise.
+  if (phase === PHASE_PRODUCTION_BUILD && !process.env.NEXT_PUBLIC_API_URL) {
+    throw new Error(
+      'NEXT_PUBLIC_API_URL is not set. Set it to your backend URL (see env.example.txt) before building for production.'
+    );
+  }
+
   // NEXT_PUBLIC_IMAGE_LOADER picks who resizes images for next/image:
   //   (empty)    Next.js built-in optimizer: sharp runs on every server/pod, each with its own cache
   //   cloudflare Cloudflare Image Transformations at the edge (production only; dev uses built-in)
