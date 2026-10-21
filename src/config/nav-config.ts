@@ -1,5 +1,4 @@
 import { NavGroup } from '@/types';
-import { AUTH } from '@/lib/api/config';
 import { ROLE } from '@/features/auth/constants';
 
 /**
@@ -26,7 +25,7 @@ export const navGroups: NavGroup[] = [
         items: []
       },
       {
-        title: 'Product',
+        title: 'Products',
         url: '/dashboard/product',
         icon: 'product',
         shortcut: ['p', 'p'],
@@ -89,25 +88,6 @@ export const navGroups: NavGroup[] = [
         icon: 'palette',
         isActive: false,
         items: []
-      }
-    ]
-  },
-  {
-    label: '',
-    items: [
-      {
-        title: 'Account',
-        url: '#',
-        icon: 'account',
-        isActive: true,
-        items: [
-          {
-            title: 'Login',
-            shortcut: ['l', 'l'],
-            url: AUTH.signInPath,
-            icon: 'login'
-          }
-        ]
       }
     ]
   }

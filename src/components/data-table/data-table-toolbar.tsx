@@ -10,6 +10,7 @@ import { DataTableDateFilter } from '@/components/data-table/data-table-date-fil
 import { DataTableFacetedFilter } from '@/components/data-table/data-table-faceted-filter';
 import { DataTableSliderFilter } from '@/components/data-table/data-table-slider-filter';
 import { DataTableViewOptions } from '@/components/data-table/data-table-view-options';
+import { DataTableDensityToggle } from '@/components/data-table/data-table-density-toggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { IconX } from '@tabler/icons-react';
@@ -62,6 +63,7 @@ export function DataTableToolbar<TData extends RowData>({
       </div>
       <div className='flex items-center gap-2'>
         {children}
+        <DataTableDensityToggle />
         <DataTableViewOptions table={table} align='end' />
       </div>
     </div>

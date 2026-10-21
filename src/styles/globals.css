@@ -639,3 +639,14 @@
     -webkit-text-fill-color: currentColor;
   }
 }
+
+/* Sign-in side panel: a dot grid that fades toward the edges. Pure CSS, so it
+   costs no image bytes and follows the active theme. */
+@utility auth-backdrop {
+  background-image: radial-gradient(
+    color-mix(in oklch, var(--foreground) 16%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 75% 65% at 45% 50%, black 25%, transparent 80%);
+}

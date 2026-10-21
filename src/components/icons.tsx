@@ -33,6 +33,7 @@ import {
   IconDotsVertical,
   IconEdit,
   IconExternalLink,
+  IconEye,
   IconEyeOff,
   IconFile,
   IconFileText,
@@ -48,6 +49,8 @@ import {
   IconLayoutDashboard,
   IconLayoutKanban,
   IconLayoutSidebar,
+  IconLayoutList,
+  IconLayoutRows,
   IconLoader2,
   IconLock,
   IconLogin,
@@ -127,6 +130,8 @@ export const Icons = {
   dashboard: IconLayoutDashboard,
   kanban: IconLayoutKanban,
   panelLeft: IconLayoutSidebar,
+  rowsCompact: IconLayoutList,
+  rowsComfortable: IconLayoutRows,
 
   // User
   user: IconUser,
@@ -196,6 +201,7 @@ export const Icons = {
   // Data / Charts
   trendingDown: IconTrendingDown,
   trendingUp: IconTrendingUp,
+  eye: IconEye,
   eyeOff: IconEyeOff,
   adjustments: IconAdjustmentsHorizontal,
 

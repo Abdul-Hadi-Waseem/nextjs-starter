@@ -1,9 +1,10 @@
 import { DataTableSkeleton } from '@/components/data-table/data-table-skeleton';
+import { UsersPageShell } from '@/features/users/components/users-page-shell';
 
 export default function Loading() {
   return (
-    <div className='flex flex-1 flex-col px-4 pt-2 pb-4 md:px-6 md:pt-4'>
+    <UsersPageShell>
       <DataTableSkeleton columnCount={6} rowCount={10} filterCount={2} />
-    </div>
+    </UsersPageShell>
   );
 }

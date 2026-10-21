@@ -337,13 +337,26 @@ const form = useAppForm({
 
 ---
 
+## 7. Adding a shadcn Component
+
+1. `bunx shadcn@latest add <name>` (lands in `src/components/ui/`). Use `--view` to read it first, `--diff` before overwriting an edited one.
+2. `bun run format`, then check the `cva()` colors are theme tokens. (`from 'cn'` in new components is fine: `@/lib/utils` re-exports the same `cn` package.)
+3. To match the design: tokens in `src/styles/theme.css` / `themes/*.css` first, then a new `cva` variant in the component file, then `className` for one-offs. Composite patterns are wrappers in `src/components/`.
+
+## 8. Where Things Go (components and state)
+
+- One feature → `src/features/<name>/components/`; two or more → `src/components/`. Start in the feature.
+- State: TanStack Query (server data), nuqs (URL), TanStack Form (forms). Zustand only for client-only state shared across components: `src/stores/` (shared) or `src/features/<name>/stores/`. Persisted stores use `skipHydration` + `PreferencesHydrator` (see `src/stores/ui-preferences.ts`).
+
+---
+
 ## Code Conventions
 
 - **`cn()` for class merging** — never concatenate className strings
 - **Server components by default** — only add `'use client'` when needed
 - **React Query for data fetching** — `useQuery` + `shallow: true` for tables, `useMutation` (spreading shared `mutationOptions`) for forms
 - **`api` for HTTP** — never `fetch` directly in features
-- **Env** — read variables via `env` from `@/env` (zod-validated in `src/env.ts`), never `process.env`; add new ones to `src/env.ts` and `env.example.txt`
+- **Env** — declare in `src/env.ts` (zod) + `env.example.txt`; server code reads `env` from `@/env`, browser code reads `PUBLIC_ENV` from `@/lib/public-env`; never `process.env` elsewhere
 - **New third-party origin** (API, images, scripts) — add it in `src/config/security-headers.ts` / `src/config/images.ts`, or the CSP will block it
 - **nuqs for URL state** — `searchParamsCache` on server, `useQueryState` on client
 - **Formatting**: single quotes, JSX single quotes, no trailing comma, 2-space tabs

@@ -252,3 +252,6 @@ import { DatePickerField } from '@/components/forms/fields/date-picker-field';
 <form.AppField name='birthDate' children={() => <DatePickerField label='Birth Date' />} />
 ```
 
+## Password field
+
+`field.PasswordField` is registered in `useAppForm`: a password input with a show/hide toggle (`src/components/forms/fields/password-field.tsx`). Used on the sign-in page.

@@ -2,6 +2,7 @@
 import React from 'react';
 import { ActiveThemeProvider } from '@/components/themes/active-theme';
 import QueryProvider from '@/components/layout/query-provider';
+import { PreferencesHydrator } from '@/stores/preferences-hydrator';
 
 export default function Providers({
   activeThemeValue,
@@ -14,6 +15,7 @@ export default function Providers({
     <>
       <ActiveThemeProvider initialTheme={activeThemeValue}>
         <QueryProvider>{children}</QueryProvider>
+        <PreferencesHydrator />
       </ActiveThemeProvider>
     </>
   );

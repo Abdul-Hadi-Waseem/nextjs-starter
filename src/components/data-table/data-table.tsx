@@ -11,6 +11,15 @@ import {
   Subscribe
 } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
+import { useUiPreferences } from '@/stores/ui-preferences';
+import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle
+} from '@/components/ui/empty';
 import * as React from 'react';
 
 import type { DataTableFeatures } from '@/lib/data-table-features';
@@ -91,6 +100,8 @@ function DataTableLayout<TData extends RowData>({
   children,
   ...props
 }: DataTableLayoutProps<TData>) {
+  const density = useUiPreferences((state) => state.tableDensity);
+
   return (
     <table.Subscribe
       selector={(state) => ({
@@ -101,7 +112,12 @@ function DataTableLayout<TData extends RowData>({
       })}
     >
       {() => (
-        <Table style={getColumnSizingStyle(table)} {...props}>
+        <Table
+          style={getColumnSizingStyle(table)}
+          data-density={density}
+          className='data-[density=compact]:[&_td]:py-0.5 data-[density=compact]:[&_th]:h-8'
+          {...props}
+        >
           {children}
         </Table>
       )}
@@ -183,11 +199,37 @@ function DataTableBody<TData extends RowData>({ table }: DataTableBodyProps<TDat
         {() => (
           <TableBody>
             <TableRow>
-              <TableCell
-                colSpan={table.getVisibleLeafColumns().length || 1}
-                className='h-24 text-center'
-              >
-                No results.
+              <TableCell colSpan={table.getVisibleLeafColumns().length || 1} className='p-0'>
+                <Subscribe
+                  source={table.atoms.columnFilters}
+                  selector={(filters) => filters.length > 0}
+                >
+                  {(isFiltered) => (
+                    <Empty className='py-10'>
+                      <EmptyHeader>
+                        <EmptyTitle>
+                          {isFiltered ? 'No matching results' : 'Nothing here yet'}
+                        </EmptyTitle>
+                        {isFiltered && (
+                          <EmptyDescription>
+                            Try a different search, or clear the filters.
+                          </EmptyDescription>
+                        )}
+                      </EmptyHeader>
+                      {isFiltered && (
+                        <EmptyContent>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => table.resetColumnFilters(true)}
+                          >
+                            Clear filters
+                          </Button>
+                        </EmptyContent>
+                      )}
+                    </Empty>
+                  )}
+                </Subscribe>
               </TableCell>
             </TableRow>
           </TableBody>

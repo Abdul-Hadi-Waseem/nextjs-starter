@@ -8,11 +8,14 @@ import { Icons } from '@/components/icons';
 import Image from 'next/image';
 import { CellAction } from './cell-action';
 import { CATEGORY_OPTIONS } from './options';
+import { formatCurrency } from '@/lib/format';
+import { TruncatedText } from '@/components/truncated-text';
 
 export const columns: ColumnDef<DataTableFeatures, Product>[] = [
   {
     accessorKey: 'photo_url',
-    header: 'IMAGE',
+    enableSorting: false,
+    header: ({ column }) => <DataTableColumnHeader column={column} label='Image' />,
     cell: ({ row }) => {
       return (
         <div className='relative aspect-square'>
@@ -45,17 +48,11 @@ export const columns: ColumnDef<DataTableFeatures, Product>[] = [
     accessorKey: 'category',
     enableSorting: false,
     header: ({ column }) => <DataTableColumnHeader column={column} label='Category' />,
-    cell: ({ cell }) => {
-      const status = cell.getValue<Product['category']>();
-      const Icon = status === 'active' ? Icons.circleCheck : Icons.xCircle;
-
-      return (
-        <Badge variant='outline' className='capitalize'>
-          <Icon />
-          {status}
-        </Badge>
-      );
-    },
+    cell: ({ cell }) => (
+      <Badge variant='outline' className='capitalize'>
+        {cell.getValue<Product['category']>()}
+      </Badge>
+    ),
     enableColumnFilter: true,
     meta: {
       label: 'categories',
@@ -65,11 +62,22 @@ export const columns: ColumnDef<DataTableFeatures, Product>[] = [
   },
   {
     accessorKey: 'price',
-    header: 'PRICE'
+    enableSorting: false,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} label='Price' className='justify-end' />
+    ),
+    cell: ({ cell }) => (
+      <div className='text-right tabular-nums'>
+        {formatCurrency(cell.getValue<Product['price']>())}
+      </div>
+    )
   },
   {
     accessorKey: 'description',
-    header: 'DESCRIPTION'
+    enableSorting: false,
+    header: ({ column }) => <DataTableColumnHeader column={column} label='Description' />,
+    // One line with an ellipsis; the full text is in the tooltip.
+    cell: ({ cell }) => <TruncatedText text={cell.getValue<Product['description']>()} />
   },
 
   {

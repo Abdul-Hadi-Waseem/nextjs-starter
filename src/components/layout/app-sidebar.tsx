@@ -1,14 +1,6 @@
 'use client';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -28,6 +20,8 @@ import { useFilteredNavGroups } from '@/hooks/use-nav';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icons } from '@/components/icons';
+import { SidebarBrand } from './sidebar-brand';
+import { SidebarUser } from './sidebar-user';
 
 export default function AppSidebar() {
   const pathname = usePathname();
@@ -35,7 +29,9 @@ export default function AppSidebar() {
 
   return (
     <Sidebar collapsible='icon'>
-      <SidebarHeader />
+      <SidebarHeader>
+        <SidebarBrand />
+      </SidebarHeader>
       <SidebarContent className='overflow-x-hidden'>
         {filteredGroups.map((group) => (
           <SidebarGroup key={group.label || 'ungrouped'} className='py-0'>
@@ -95,39 +91,7 @@ export default function AppSidebar() {
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <SidebarMenuButton
-                    size='lg'
-                    className='data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground'
-                  />
-                }
-              >
-                <span className='truncate'>Account</span>
-                <Icons.chevronsDown className='ml-auto size-4' />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className='w-(--anchor-width) min-w-56 rounded-lg'
-                side='bottom'
-                align='end'
-                sideOffset={4}
-              >
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel className='p-0 font-normal'>
-                    <div className='text-muted-foreground px-1 py-1.5 text-sm'>
-                      Sign in to manage your account
-                    </div>
-                  </DropdownMenuLabel>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup></DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <SidebarUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

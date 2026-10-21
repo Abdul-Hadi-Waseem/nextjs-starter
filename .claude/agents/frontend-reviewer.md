@@ -14,7 +14,8 @@ Check, in this order:
 3. **Bundle**: New client-side dependencies: are they needed, and how big? Heavy client-only libraries (charts, editors, pickers, palettes) loaded with `next/dynamic`. Heavy form fields imported directly, not registered in `@/lib/form`. `'use client'` only where state or effects need it. If a build exists, run `bun run bundle:check` and report changes.
 4. **Images**: `next/image` with `sizes`, no `<img>`; assets are WebP/AVIF/SVG under 300 KB (`bun run images:check`).
 5. **Accessibility**: Labels on inputs, `alt` text, buttons vs links used correctly, keyboard reachable, focus visible, no color-only meaning.
-6. **Conventions**: Icons only from `@/components/icons`; `cn()` for classes; `PageContainer` for page headers; constants as `as const` objects, not string literals; named exports for new modules; feature code under `src/features/<name>/`.
-7. **Gates**: Run `bun run typecheck` and `bun run lint` and include the result.
+6. **shadcn and placement**: New `src/components/ui/*` files: `cva()` colors are tokens (importing `cn` from `'cn'` or `@/lib/utils` is equivalent). Feature-only components live in `src/features/<name>/components/`; only shared ones in `src/components/`. Zustand is used only for client-only state shared across components, not for server data or URL state.
+7. **Conventions**: Icons only from `@/components/icons`; `cn()` for classes; `PageContainer` for page headers; constants as `as const` objects, not string literals; named exports for new modules; feature code under `src/features/<name>/`.
+8. **Gates**: Run `bun run typecheck` and `bun run lint` and include the result.
 
 End with a short verdict: **ready**, or **needs changes** with the must-fix list first.

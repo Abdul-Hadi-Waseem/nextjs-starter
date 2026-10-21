@@ -6,10 +6,10 @@ import { InfobarProvider } from '@/components/ui/infobar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
+import { SITE } from '@/config/site';
 
 export const metadata: Metadata = {
-  title: 'Next Shadcn Dashboard Starter',
-  description: 'Basic dashboard with Next.js and Shadcn',
+  title: { default: SITE.name, template: `%s | ${SITE.name}` },
   robots: {
     index: false,
     follow: false

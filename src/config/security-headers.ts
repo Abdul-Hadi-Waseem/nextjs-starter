@@ -40,6 +40,8 @@ export function buildCsp({ isDev, apiUrl, imageHosts, cfImageBase }: Options) {
     'connect-src': ["'self'", originOf(apiUrl), ...EXTRA_CONNECT_SRC].filter(
       (value): value is string => Boolean(value)
     ),
+    // Dev tools (React Scan) draw from a blob: web worker; production allows none.
+    'worker-src': ["'self'", ...(isDev ? ['blob:'] : [])],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],
     'form-action': ["'self'"],

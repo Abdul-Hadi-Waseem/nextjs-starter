@@ -2,7 +2,7 @@ import PageContainer from '@/components/layout/page-container';
 import SheetFormDemo from '@/features/forms/components/sheet-form-demo';
 
 export const metadata = {
-  title: 'Dashboard: Sheet Form'
+  title: 'Sheet Form'
 };
 
 export default async function Page() {

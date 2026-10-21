@@ -8,7 +8,7 @@ import { PokemonSkeleton } from '@/features/react-query-demo/components/pokemon-
 import { reactQueryInfoContent } from '@/features/react-query-demo/info-content';
 
 export const metadata = {
-  title: 'Dashboard: React Query'
+  title: 'React Query'
 };
 
 export default async function ReactQueryPage() {

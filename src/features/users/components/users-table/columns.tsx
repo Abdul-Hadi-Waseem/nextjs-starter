@@ -31,7 +31,8 @@ export const columns: ColumnDef<DataTableFeatures, User>[] = [
   },
   {
     accessorKey: 'phone',
-    header: 'PHONE'
+    enableSorting: false,
+    header: ({ column }) => <DataTableColumnHeader column={column} label='Phone' />
   },
   {
     id: 'role',
@@ -54,7 +55,8 @@ export const columns: ColumnDef<DataTableFeatures, User>[] = [
   },
   {
     accessorKey: 'status',
-    header: 'STATUS',
+    enableSorting: false,
+    header: ({ column }) => <DataTableColumnHeader column={column} label='Status' />,
     cell: ({ cell }) => {
       const status = cell.getValue<User['status']>();
       const variant =

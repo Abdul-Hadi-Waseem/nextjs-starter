@@ -10,6 +10,7 @@ import NextTopLoader from 'nextjs-toploader';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import '../styles/globals.css';
 import { env } from '@/env';
+import { SITE } from '@/config/site';
 
 const META_THEME_COLORS = {
   light: '#ffffff',
@@ -18,35 +19,22 @@ const META_THEME_COLORS = {
 
 export const metadata: Metadata = {
   ...(env.NEXT_PUBLIC_APP_URL ? { metadataBase: new URL(env.NEXT_PUBLIC_APP_URL) } : {}),
-  title: {
-    default: 'Shadcn Dashboard - Next.js Admin Dashboard Template',
-    template: '%s | Shadcn Dashboard'
-  },
-  description:
-    'Free, open source admin dashboard starter built with Next.js 16, shadcn/ui, Tailwind CSS, and TypeScript.',
+  title: { default: SITE.name, template: `%s | ${SITE.name}` },
+  description: SITE.description,
   // Images live only in public/ (enforced by `bun run images:check`).
   icons: { icon: '/favicon.ico' },
   openGraph: {
-    title: 'Shadcn Dashboard - Next.js Admin Dashboard Template',
-    description:
-      'Free, open source admin dashboard starter built with Next.js 16, shadcn/ui, Tailwind CSS, and TypeScript.',
-    siteName: 'Shadcn Dashboard',
+    title: SITE.name,
+    description: SITE.description,
+    siteName: SITE.name,
     type: 'website',
-    images: [
-      {
-        url: '/og/cover.png',
-        width: 1200,
-        height: 630,
-        alt: 'Shadcn Dashboard overview page'
-      }
-    ]
+    images: [{ ...SITE.ogImage, alt: SITE.name }]
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Shadcn Dashboard - Next.js Admin Dashboard Template',
-    description:
-      'Free, open source admin dashboard starter built with Next.js 16, shadcn/ui, Tailwind CSS, and TypeScript.',
-    images: ['/og/cover.png']
+    title: SITE.name,
+    description: SITE.description,
+    images: [SITE.ogImage.url]
   }
 };
 

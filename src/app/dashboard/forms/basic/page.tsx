@@ -2,7 +2,7 @@ import PageContainer from '@/components/layout/page-container';
 import DemoForm from '@/components/forms/demo-form';
 
 export const metadata = {
-  title: 'Dashboard: Basic Form'
+  title: 'Basic Form'
 };
 
 export default async function Page() {

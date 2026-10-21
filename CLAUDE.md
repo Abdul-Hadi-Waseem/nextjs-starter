@@ -31,5 +31,12 @@ This is a Next.js 16 + shadcn/ui admin dashboard starter kit. Package manager: *
 - Agent: `.claude/agents/frontend-reviewer.md` — run it after a feature, before committing.
 - Hooks (`.claude/settings.json`): every edited file is formatted and linted; the typecheck runs before Claude finishes.
 - MCP: Figma's remote server in `.mcp.json` (authenticate once via `/mcp`; needs a Dev or Full seat).
-- **Env** — declare every variable in `src/env.ts` (zod) and read it via `env` from `@/env`, never `process.env`; add new ones to `env.example.txt` too
+- **Env** — declare every variable in `src/env.ts` (zod) and add it to `env.example.txt`; server code reads `env` from `@/env`, browser code reads `PUBLIC_ENV` from `@/lib/public-env` (keeps zod out of the bundle); never `process.env` elsewhere
 - **Security headers / CSP** — `src/config/security-headers.ts`; add third-party origins there and image hosts in `src/config/images.ts`
+- **Branding** — app name/description only in `src/config/site.ts` (`SITE`)
+- **Loading states** — `loading.tsx` reuses the page's shell (same header) and skeletons match real sizes; no layout shift
+- **Debugging re-renders** — `bun run dev:scan` (React Scan + React Query devtools, dev only)
+- **Components placement** — one feature → `src/features/<name>/components/`; used by 2+ features → `src/components/`; start in the feature, move when a second one needs it
+- **After `shadcn add`** — `bun run format`; colors in `cva()` must be tokens (`cn` comes from shadcn's `cn` package; `from 'cn'` and `from '@/lib/utils'` are the same function); fix the design via tokens → a `cva` variant → `className`, in that order (docs/frontend.md)
+- **Client state** — TanStack Query (server), nuqs (URL), TanStack Form (forms); Zustand only for client-only state shared across components (`src/stores/` shared, `src/features/<name>/stores/` per feature)
+

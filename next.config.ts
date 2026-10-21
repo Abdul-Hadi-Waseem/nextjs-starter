@@ -26,6 +26,9 @@ export default function nextConfig(phase: string): NextConfig {
       remotePatterns: REMOTE_IMAGE_HOSTS.map((host) => ({ ...host }))
     },
     poweredByHeader: false,
+    // Hide the dev badge (it covers the sidebar footer or pagination in every
+    // corner). Compile and runtime errors still show.
+    devIndicators: false,
     async headers() {
       return [
         {
