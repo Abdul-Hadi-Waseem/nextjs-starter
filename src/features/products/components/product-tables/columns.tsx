@@ -24,7 +24,7 @@ export const columns: ColumnDef<DataTableFeatures, Product>[] = [
             alt={row.getValue('name')}
             fill
             sizes='80px'
-            className='rounded-lg'
+            className='rounded-lg object-cover'
           />
         </div>
       );
